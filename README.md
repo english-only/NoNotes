@@ -83,52 +83,95 @@ Ingest → Process → Generate → Study → Schedule → Evaluate → Review
 
 ### Prerequisites
 - Node.js 20+
-- A Google Gemini API key ([get one here](https://aistudio.google.com/apikey))
+- A Google Gemini API key ([get one here](https://aistudio.google.com/apikey)) — only needed for AI features (generation, Feynman evaluation)
 
-### Install
+### Quick Start (first run)
 
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Start the dev server
+npm run dev
+
+# 3. Open the app
+open http://localhost:3000
 ```
 
-### Development
+You will be redirected to `/dashboard`. From there:
+
+1. **Create a course** — click "Create your first course", give it a title
+2. **Create a topic** — open the course, click "Add topic"
+3. **Add a source** — click "Add source", paste some text or upload a file
+4. **Create a deck** — assign it to a topic (optional)
+5. **Add flashcards** — create them manually, or generate them from a source using AI
+6. **Study** — go to `/study`, pick a deck, and review cards
+
+All your data lives in your browser's IndexedDB — nothing leaves your machine except AI prompts sent to Google's Gemini API when you use generation or Feynman evaluation.
+
+### API Key Setup (for AI features)
+
+The app works without an API key for manual study, ingestion, search, and analytics. You only need a key if you want to use AI generation or Feynman evaluation:
+
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+2. Open the app and go to **Settings** (sidebar or mobile nav)
+3. Paste your key in the "API Key" field and click **Save**
+4. The key is stored in `localStorage` — it is **never** exported, **never** included in backups, and only sent to Google's Gemini API
+5. Click the eye icon to show/hide the key
+
+### Production Build
 
 ```bash
-npm run dev
+npm run build
+npm start
 ```
 
-Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+Open [http://localhost:3000](http://localhost:3000).
 
-### Commands
+### All Commands
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server |
+| `npm run dev` | Start development server on port 3000 |
 | `npm run build` | Production build |
 | `npm start` | Start production server |
-| `npm test` | Run unit/integration tests (Vitest) |
-| `npm run test:e2e` | Run Playwright browser tests |
-| `npm run typecheck` | TypeScript type checking |
+| `npm test` | Run 268 unit/integration tests (Vitest) |
+| `npm run test:e2e` | Run 129 Playwright browser tests |
+| `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `npm run lint` | ESLint |
-
-### API Key Setup
-
-1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
-2. Open the app and go to **Settings**
-3. Paste your key in the API Key field and click **Save**
-4. The key is stored in `localStorage` (never exported, never sent to any server except Google's Gemini API)
 
 ### Running Tests
 
 ```bash
-# Unit + integration tests (Vitest with fake-indexeddb)
+# Unit + integration tests (Vitest with fake-indexeddb — no browser needed)
 npm test
 
-# Browser end-to-end tests (Playwright)
+# Browser end-to-end tests (Playwright — requires Chromium)
+npx playwright install chromium
 npm run test:e2e
 ```
 
-Tests use mocked AI providers — no live Gemini calls required.
+Tests use mocked AI providers — no live Gemini API key required. The browser tests launch a full Chromium instance and exercise the real UI against a temporary Next.js dev server.
+
+### Troubleshooting
+
+**"API key not configured" when using generation or Feynman**
+→ Go to Settings and paste your Gemini API key. The key is saved per-browser, so you'll need to set it again if you clear browser data.
+
+**PDF upload doesn't extract text**
+→ Scanned or image-only PDFs have no extractable text — OCR is not included. Try a text-based PDF.
+
+**URL ingestion fails**
+→ The URL extractor blocks private/internal addresses (localhost, 192.168.x, 10.x). Ensure you're using a publicly accessible HTTP/HTTPS URL. The dev server must be running (the extraction happens server-side).
+
+**Cards don't appear in study**
+→ Only due cards appear — FSRS schedules cards into the future based on your ratings. New cards are immediately due. If you've already reviewed all cards, try creating more or wait for existing cards to become due.
+
+**Build fails or dependencies won't install**
+→ Ensure you're on Node.js 20+. Run `rm -rf node_modules package-lock.json && npm install` for a clean reinstall.
+
+**Browser tests fail**
+→ Run `npx playwright install chromium` first. The tests use port 3800 (configured in `playwright.config.ts`). Kill any process on that port before running: `pkill -f "next dev"`.
 
 ## Known Limitations
 
