@@ -13,6 +13,8 @@ test.describe("Courses", () => {
     await page.getByLabel(/title/i).fill("Biology 101");
     await page.getByLabel(/description/i).fill("Introduction to biology");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    // Dialog now shows success state with "Close" button instead of closing
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Biology 101")).toBeVisible({ timeout: 5000 });
   });
@@ -39,11 +41,12 @@ test.describe("Courses", () => {
     await page.getByRole("button", { name: "Create your first course" }).click();
     await page.getByLabel(/title/i).fill("To Delete");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    // Dismiss success state
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("To Delete")).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("button", { name: "Delete To Delete" }).click();
-    // The confirm button says "Delete" in the inline confirmation
     await page.getByRole("button", { name: /^Delete$/i }).click();
     await expect(page.getByText("To Delete")).not.toBeVisible({ timeout: 5000 });
   });
@@ -53,6 +56,7 @@ test.describe("Courses", () => {
     await page.getByRole("button", { name: "Create your first course" }).click();
     await page.getByLabel(/title/i).fill("Keep Me");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Keep Me")).toBeVisible({ timeout: 5000 });
 
@@ -68,12 +72,14 @@ test.describe("Courses", () => {
     await page.getByRole("button", { name: "Create your first course" }).click();
     await page.getByLabel(/title/i).fill("Course A");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Course A")).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("button", { name: "Create course" }).first().click();
     await page.getByLabel(/title/i).fill("Course B");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Course B")).toBeVisible({ timeout: 5000 });
 
@@ -88,6 +94,7 @@ test.describe("Courses", () => {
     await page.getByRole("button", { name: "Create your first course" }).click();
     await page.getByLabel(/title/i).fill("Navigate Me");
     await page.getByRole("button", { name: "Create course" }).last().click();
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Navigate Me")).toBeVisible({ timeout: 5000 });
 

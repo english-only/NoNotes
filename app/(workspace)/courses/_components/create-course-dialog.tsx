@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +27,7 @@ type CreateCourseDialogProps = {
   onOpenChange: (open: boolean) => void;
   /** When provided, the dialog edits this course instead of creating one. */
   course?: Course;
-  onSaved: () => void;
+  onSaved: (createdId?: string) => void;
 };
 
 export function CreateCourseDialog({
@@ -38,6 +41,7 @@ export function CreateCourseDialog({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
+  const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
 
   // Reset the form on every open transition so stale values never leak
   // between create/edit targets or between successive opens.
@@ -46,6 +50,7 @@ export function CreateCourseDialog({
     setDescription(course?.description ?? "");
     setError(null);
     setSaving(false);
+    setCreatedCourseId(null);
   }
   if (wasOpen !== open) {
     setWasOpen(open);
@@ -60,11 +65,13 @@ export function CreateCourseDialog({
     try {
       if (course) {
         await updateCourse(course.id, { title, description });
+        onSaved();
+        onOpenChange(false);
       } else {
-        await createCourse({ title, description });
+        const created = await createCourse({ title, description });
+        setCreatedCourseId(created.id);
+        onSaved(created.id);
       }
-      onSaved();
-      onOpenChange(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not save the course."
@@ -122,23 +129,56 @@ export function CreateCourseDialog({
               {error}
             </p>
           )}
-          <DialogFooter>
-            <Button
-              disabled={saving}
-              onClick={() => onOpenChange(false)}
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button disabled={saving} type="submit">
-              {saving
-                ? "Saving…"
-                : editing
-                  ? "Save changes"
-                  : "Create course"}
-            </Button>
-          </DialogFooter>
+
+          {createdCourseId ? (
+            <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <p className="text-sm font-medium text-emerald-300">
+                Course created!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Now add topics, sources, and decks to start building your study
+                material.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => onOpenChange(false)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Close
+                </Button>
+                <Link
+                  className={cn(
+                    buttonVariants({ size: "sm" }),
+                    "inline-flex items-center gap-1.5",
+                  )}
+                  href={`/courses/${createdCourseId}`}
+                >
+                  Open course
+                  <ArrowUpRight aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <DialogFooter>
+              <Button
+                disabled={saving}
+                onClick={() => onOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button disabled={saving} type="submit">
+                {saving
+                  ? "Saving…"
+                  : editing
+                    ? "Save changes"
+                    : "Create course"}
+              </Button>
+            </DialogFooter>
+          )}
         </form>
       </DialogContent>
     </Dialog>
