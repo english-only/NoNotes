@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  isNavigationItemActive,
   navigationItems,
   secondaryNavigationItems,
 } from "@/components/layout/navigation";
@@ -53,7 +54,7 @@ export function SidebarNav() {
           <SidebarLink
             key={item.href}
             {...item}
-            active={pathname === item.href}
+            active={isNavigationItemActive(pathname, item.href)}
           />
         ))}
       </div>
@@ -66,7 +67,7 @@ export function SidebarNav() {
           <SidebarLink
             key={item.href}
             {...item}
-            active={pathname === item.href}
+            active={isNavigationItemActive(pathname, item.href)}
           />
         ))}
       </div>

@@ -6,8 +6,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-/** Maximum allowed PDF file size (10 MB). */
-const MAX_PDF_SIZE = 10 * 1024 * 1024;
+/** Maximum allowed PDF file size (70 MB). */
+const MAX_PDF_SIZE = 70 * 1024 * 1024;
 
 /** Result of PDF text extraction. */
 export type PdfExtractionResult = {
@@ -31,7 +31,7 @@ export async function extractPdfText(
   // Validate size
   if (data.byteLength > MAX_PDF_SIZE) {
     throw new Error(
-      `PDF file is too large (${Math.round(data.byteLength / 1024 / 1024)} MB). Maximum is 10 MB.`,
+      `PDF file is too large (${Math.round(data.byteLength / 1024 / 1024)} MB). Maximum is 70 MB.`,
     );
   }
 

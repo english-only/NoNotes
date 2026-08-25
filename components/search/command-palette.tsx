@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, startTransition } from "react";
-import { Search, FileText, BookOpen, Layers, Brain, Hash, Loader2 } from "lucide-react";
+import {
+  Search,
+  FileText,
+  BookOpen,
+  Layers,
+  Brain,
+  Hash,
+  Loader2,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { search as searchIndex, rebuildIndex, onIndexChange } from "@/lib/search/index";
@@ -35,7 +44,9 @@ export function CommandPalette() {
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const wasOpenRef = useRef(false);
   const router = useRouter();
 
   // Build index on mount and subscribe to changes
@@ -62,6 +73,7 @@ export function CommandPalette() {
   // Focus input when opened + global Escape handler
   useEffect(() => {
     if (open) {
+      wasOpenRef.current = true;
       // Small delay to ensure dialog is mounted
       const timer = setTimeout(() => {
         inputRef.current?.focus();
@@ -79,6 +91,12 @@ export function CommandPalette() {
         clearTimeout(timer);
         document.removeEventListener("keydown", handleGlobalEscape);
       };
+    }
+    // Restore focus to the trigger after any close path: Escape, backdrop,
+    // close button, or selecting a result.
+    if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      triggerRef.current?.focus();
     }
     // Reset state when closed
     startTransition(() => {
@@ -125,7 +143,21 @@ export function CommandPalette() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "ArrowDown") {
+      if (e.key === "Tab") {
+        const focusable = Array.from(
+          e.currentTarget.querySelectorAll<HTMLElement>(
+            "input:not([disabled]), button:not([disabled])",
+          ),
+        );
+        if (focusable.length > 0) {
+          e.preventDefault();
+          const current = focusable.indexOf(document.activeElement as HTMLElement);
+          const next = e.shiftKey
+            ? (current - 1 + focusable.length) % focusable.length
+            : (current + 1) % focusable.length;
+          focusable[next]?.focus();
+        }
+      } else if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
       } else if (e.key === "ArrowUp") {
@@ -152,9 +184,11 @@ export function CommandPalette() {
   if (!open) {
     return (
       <Button
+        aria-haspopup="dialog"
         aria-label="Open search"
         className="flex items-center gap-2 border border-border/50 bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/50"
         onClick={() => setOpen(true)}
+        ref={triggerRef}
         variant="ghost"
       >
         <Search aria-hidden="true" className="size-4" />
@@ -170,23 +204,28 @@ export function CommandPalette() {
     <>
       {/* Backdrop */}
       <div
+        aria-hidden="true"
         className="fixed inset-0 z-50 bg-black/50"
         onClick={() => setOpen(false)}
-        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
       />
 
       {/* Dialog */}
       <div
         className="fixed left-1/2 top-[15%] z-50 w-full max-w-lg -translate-x-1/2 rounded-lg border border-border/70 bg-card shadow-2xl"
-        role="dialog"
         aria-label="Search"
+        aria-modal="true"
         onKeyDown={handleKeyDown}
+        role="dialog"
       >
         {/* Search input */}
         <div className="flex items-center gap-3 border-b border-border/50 px-4">
-          <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          <Search
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
           <input
             ref={inputRef}
+            aria-controls="search-results"
             aria-label="Search"
             className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             onChange={(e) => setQuery(e.target.value)}
@@ -197,14 +236,23 @@ export function CommandPalette() {
           {loading && (
             <Loader2 aria-hidden="true" className="size-4 animate-spin text-muted-foreground" />
           )}
+          <Button
+            aria-label="Close search"
+            onClick={() => setOpen(false)}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <X aria-hidden="true" />
+          </Button>
         </div>
 
         {/* Results */}
         <div
-          ref={listRef}
-          className="max-h-[400px] overflow-y-auto"
-          role="listbox"
           aria-label="Search results"
+          className="max-h-[400px] overflow-y-auto"
+          id="search-results"
+          ref={listRef}
+          role="listbox"
         >
           {query.trim() && !loading && results.length === 0 && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">

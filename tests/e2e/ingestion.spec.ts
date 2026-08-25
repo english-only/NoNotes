@@ -49,7 +49,7 @@ test.describe("Ingestion", () => {
     await page.getByLabel("Format").selectOption("pdf");
 
     // Should show file upload input with size limit info
-    await expect(page.getByText("Maximum file size")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Maximum file size: 70 MB")).toBeVisible({ timeout: 5000 });
   });
 
   test("Add Source dialog shows URL input option", async ({ page }) => {

@@ -60,6 +60,7 @@ export function DeckWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [dialogTarget, setDialogTarget] = useState<DialogTarget | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -118,6 +119,7 @@ export function DeckWorkspace({
 
   async function handleDelete(card: Flashcard) {
     setError(null);
+    setDeletingId(card.id);
     try {
       await deleteFlashcard(card.id);
       setConfirmingId(null);
@@ -126,6 +128,8 @@ export function DeckWorkspace({
       setError(
         err instanceof Error ? err.message : "Could not delete the card."
       );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -308,6 +312,7 @@ export function DeckWorkspace({
                       </p>
                       <div className="flex gap-2">
                         <Button
+                          disabled={deletingId === card.id}
                           onClick={() => setConfirmingId(null)}
                           size="sm"
                           variant="outline"
@@ -315,11 +320,12 @@ export function DeckWorkspace({
                           Cancel
                         </Button>
                         <Button
+                          disabled={deletingId === card.id}
                           onClick={() => void handleDelete(card)}
                           size="sm"
                           variant="destructive"
                         >
-                          Delete
+                          {deletingId === card.id ? "Deleting…" : "Delete"}
                         </Button>
                       </div>
                     </div>

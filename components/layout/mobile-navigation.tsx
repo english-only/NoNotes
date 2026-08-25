@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Menu, NotebookPen } from "lucide-react";
 
 import {
+  isNavigationItemActive,
   navigationItems,
   secondaryNavigationItems,
 } from "@/components/layout/navigation";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -20,8 +22,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function MobileNavigation() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
   return (
-    <Sheet>
+    <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger
         render={
           <Button
@@ -56,21 +61,23 @@ export function MobileNavigation() {
           </p>
           {navigationItems.map((item) => {
             const Icon = item.icon;
+            const active = isNavigationItemActive(pathname, item.href);
             return (
-              <SheetClose
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                )}
+                href={item.href}
                 key={item.href}
-                render={
-                  <Link
-                    className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                    )}
-                    href={item.href}
-                  />
-                }
+                onClick={() => setOpen(false)}
               >
                 <Icon aria-hidden="true" className="size-4 text-primary" />
                 <span>{item.label}</span>
-              </SheetClose>
+              </Link>
             );
           })}
 
@@ -80,19 +87,23 @@ export function MobileNavigation() {
           </p>
           {secondaryNavigationItems.map((item) => {
             const Icon = item.icon;
+            const active = isNavigationItemActive(pathname, item.href);
             return (
-              <SheetClose
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                )}
+                href={item.href}
                 key={item.href}
-                render={
-                  <Link
-                    className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                    href={item.href}
-                  />
-                }
+                onClick={() => setOpen(false)}
               >
                 <Icon aria-hidden="true" className="size-4 text-primary" />
                 <span>{item.label}</span>
-              </SheetClose>
+              </Link>
             );
           })}
         </nav>

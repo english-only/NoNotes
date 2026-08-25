@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, Brain, Layers, NotebookPen, Search, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { fadeUp, MEDIUM, SHORT } from "@/lib/motion";
 
 export default function LandingPage() {
   return (
@@ -39,7 +43,13 @@ export default function LandingPage() {
       <main className="app-backdrop">
         {/* Hero */}
         <section className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-28 lg:px-8 lg:pb-40 lg:pt-36">
-          <div className="mx-auto max-w-3xl text-center">
+          <motion.div
+            className="mx-auto max-w-3xl text-center"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ ...MEDIUM, delay: 0.1 }}
+          >
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5">
               <Shield aria-hidden="true" className="size-3.5 text-primary" />
               <span className="text-xs font-medium text-primary">
@@ -80,7 +90,7 @@ export default function LandingPage() {
                 Open dashboard
               </Link>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Core Loop */}
@@ -129,10 +139,15 @@ export default function LandingPage() {
                     "FSRS schedules each review at the optimal moment — just before you'd forget.",
                   icon: BookOpen,
                 },
-              ].map(({ step, title, detail, icon: Icon }) => (
-                <div
+              ].map(({ step, title, detail, icon: Icon }, i) => (
+                <motion.div
                   className="flex flex-col gap-4 bg-card p-6 sm:p-8"
                   key={step}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: i * 0.08, ...SHORT }}
                 >
                   <span className="text-xs font-medium tabular-nums text-primary">
                     {step}
@@ -149,7 +164,7 @@ export default function LandingPage() {
                       {detail}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -204,10 +219,15 @@ export default function LandingPage() {
                   "Full JSON export of all your data. Import into a fresh browser. Your study material is never locked in.",
                 icon: Layers,
               },
-            ].map(({ title, detail, icon: Icon }) => (
-              <div
+            ].map(({ title, detail, icon: Icon }, i) => (
+              <motion.div
                 className="rounded-xl border border-border/60 bg-card/40 p-6"
                 key={title}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.06, ...SHORT }}
               >
                 <Icon
                   aria-hidden="true"
@@ -219,7 +239,7 @@ export default function LandingPage() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {detail}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -227,7 +247,14 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="border-t border-border/30">
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
-            <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 text-center sm:p-12">
+            <motion.div
+              className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 text-center sm:p-12"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              transition={SHORT}
+            >
               <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
                 Your material remembers you.
               </h2>
@@ -256,7 +283,7 @@ export default function LandingPage() {
                   Go to dashboard
                 </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       </main>

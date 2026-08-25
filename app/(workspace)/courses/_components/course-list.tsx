@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { staggerContainer, staggerList, SHORT } from "@/lib/motion";
 import { CreateCourseDialog } from "@/app/(workspace)/courses/_components/create-course-dialog";
 import {
   deleteCourse,
@@ -38,6 +40,7 @@ export function CourseList() {
   const [error, setError] = useState<string | null>(null);
   const [dialogTarget, setDialogTarget] = useState<DialogTarget | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchCourses = useCallback(() => listCourses(), []);
 
@@ -79,6 +82,7 @@ export function CourseList() {
 
   async function handleDelete(course: Course) {
     setError(null);
+    setDeletingId(course.id);
     try {
       await deleteCourse(course.id);
       setConfirmingId(null);
@@ -87,6 +91,8 @@ export function CourseList() {
       setError(
         err instanceof Error ? err.message : "Could not delete the course."
       );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -170,9 +176,21 @@ export function CourseList() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {courses.map((course) => (
-            <Card key={course.id}>
+        <motion.div
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <AnimatePresence>
+          {courses.map((course, i) => (
+            <motion.div
+              key={course.id}
+              variants={staggerList()}
+              custom={i}
+              transition={SHORT}
+            >
+            <Card>
               <CardHeader>
                 <CardTitle>
                   <Link
@@ -216,6 +234,7 @@ export function CourseList() {
                     </p>
                     <div className="flex gap-2">
                       <Button
+                        disabled={deletingId === course.id}
                         onClick={() => setConfirmingId(null)}
                         size="sm"
                         variant="outline"
@@ -223,11 +242,12 @@ export function CourseList() {
                         Cancel
                       </Button>
                       <Button
+                        disabled={deletingId === course.id}
                         onClick={() => void handleDelete(course)}
                         size="sm"
                         variant="destructive"
                       >
-                        Delete
+                        {deletingId === course.id ? "Deleting…" : "Delete"}
                       </Button>
                     </div>
                   </div>
@@ -238,8 +258,10 @@ export function CourseList() {
                 )}
               </CardFooter>
             </Card>
+            </motion.div>
           ))}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       )}
 
       <CreateCourseDialog

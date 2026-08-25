@@ -10,9 +10,11 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { fade, SHORT } from "@/lib/motion";
 import { getCourse } from "@/lib/db/repositories/course-repository";
 import { getDeck } from "@/lib/db/repositories/deck-repository";
 import { listFlashcardsByDeck } from "@/lib/db/repositories/flashcard-repository";
@@ -429,8 +431,16 @@ export function StudySession({ deckId }: { deckId: string }) {
             {currentCard?.prompt}
           </p>
 
+          <AnimatePresence>
           {session.phase === "revealed" && (
-            <>
+            <motion.div
+              key="answer"
+              variants={fade}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={SHORT}
+            >
               <div
                 aria-hidden="true"
                 className="my-6 h-px w-full bg-border/70"
@@ -441,8 +451,9 @@ export function StudySession({ deckId }: { deckId: string }) {
               <p className="mt-4 text-base leading-relaxed whitespace-pre-wrap text-foreground/90">
                 {currentCard?.answer}
               </p>
-            </>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         <div className="mt-5">

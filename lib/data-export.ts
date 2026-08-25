@@ -14,7 +14,7 @@ import type {
 export const EXPORT_SCHEMA_VERSION = 1;
 
 /** The application version from package.json. */
-export const APP_VERSION = "0.1.0";
+export const APP_VERSION = "1.0.0-rc.1";
 
 export type NoNotesExport = {
   /** Export schema version for import compatibility. */

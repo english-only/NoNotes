@@ -48,9 +48,15 @@ describe("extractPdfText", () => {
     await expect(extractPdfText(data, "empty.pdf")).rejects.toThrow("empty");
   });
 
-  it("rejects oversized files", async () => {
-    const data = new ArrayBuffer(11 * 1024 * 1024);
-    await expect(extractPdfText(data, "large.pdf")).rejects.toThrow("too large");
+  it("accepts a file exactly at the 70 MB limit", async () => {
+    const data = new ArrayBuffer(70 * 1024 * 1024);
+    const result = await extractPdfText(data, "limit.pdf");
+    expect(result.pageCount).toBe(1);
+  });
+
+  it("rejects files above the 70 MB limit", async () => {
+    const data = new ArrayBuffer(70 * 1024 * 1024 + 1);
+    await expect(extractPdfText(data, "large.pdf")).rejects.toThrow("70 MB");
   });
 
   it("handles malformed PDF gracefully", async () => {

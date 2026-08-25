@@ -85,7 +85,7 @@ test.describe("Settings — Export", () => {
       const fs = await import("fs");
       const content = JSON.parse(fs.readFileSync(path, "utf-8"));
       expect(content.schemaVersion).toBe(1);
-      expect(content.appVersion).toBe("0.1.0");
+      expect(content.appVersion).toBe("1.0.0-rc.1");
       expect(content.exportedAt).toBeTruthy();
       expect(content.courses).toBeDefined();
       expect(content.flashcards).toBeDefined();

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { gotoAndClear } from "./helpers";
+import { gotoAndClear, seedCourse } from "./helpers";
 
 test.describe("Navigation", () => {
   test("desktop sidebar is visible", async ({ page }) => {
@@ -43,6 +43,23 @@ test.describe("Navigation", () => {
   test("current page is indicated in navigation", async ({ page }) => {
     await gotoAndClear(page, "/courses");
     const coursesLink = page.locator("nav[aria-label='Main navigation']").getByRole("link", { name: /Courses/i });
+    await expect(coursesLink).toHaveAttribute("aria-current", "page");
+  });
+
+  test("nested course routes keep Courses active", async ({ page }) => {
+    await gotoAndClear(page, "/courses");
+    const courseId = await seedCourse(page, "Nested course");
+    await page.goto(`/courses/${courseId}`);
+    await expect(page.locator("nav[aria-label='Main navigation']").getByRole("link", { name: /Courses/i })).toHaveAttribute("aria-current", "page");
+  });
+
+  test("mobile navigation marks the current nested route", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoAndClear(page, "/courses");
+    const courseId = await seedCourse(page, "Mobile nested course");
+    await page.goto(`/courses/${courseId}`);
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    const coursesLink = page.locator("nav[aria-label='Mobile navigation']").getByRole("link", { name: /Courses/i });
     await expect(coursesLink).toHaveAttribute("aria-current", "page");
   });
 });

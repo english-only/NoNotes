@@ -25,7 +25,7 @@ Ingest → Process → Generate → Study → Schedule → Evaluate → Review
 ### Ingestion
 - **Text** — paste or type directly
 - **Markdown** — preserves structure while stripping formatting for clean chunks
-- **PDF** — client-side text extraction via pdfjs-dist (10 MB limit)
+- **PDF** — client-side text extraction via pdfjs-dist (70 MB limit)
 - **URL** — server-side HTML extraction with SSRF protection
 
 ### AI Generation
@@ -136,7 +136,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Production build |
 | `npm start` | Start production server |
 | `npm test` | Run 268 unit/integration tests (Vitest) |
-| `npm run test:e2e` | Run 129 Playwright browser tests |
+| `npm run test:e2e` | Run 131 Playwright browser tests |
 | `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `npm run lint` | ESLint |
 

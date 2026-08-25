@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, CircleUserRound } from "lucide-react";
 
 import { CommandPalette } from "@/components/search/command-palette";
 import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
@@ -33,6 +32,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pageTitle = resolvePageTitle(pathname);
   return (
     <div className="app-backdrop flex min-h-screen bg-background">
+      <a
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:text-foreground focus:ring-2 focus:ring-ring"
+        href="#main-content"
+      >
+        Skip to main content
+      </a>
       <DesktopSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/70 px-4 sm:px-6 lg:px-8">
@@ -46,12 +51,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
             <CommandPalette />
-            <span className="hidden text-xs sm:inline">Ready when you are</span>
-            <Bell aria-hidden="true" className="size-4" />
-            <CircleUserRound aria-hidden="true" className="size-5" />
           </div>
         </header>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1" id="main-content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -73,6 +73,7 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
   const [confirmingSourceId, setConfirmingSourceId] = useState<string | null>(
     null
   );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     const [nextCourse, nextTopics, nextDecks, nextSources] = await Promise.all([
@@ -128,6 +129,7 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
 
   async function handleDelete(topic: Topic) {
     setError(null);
+    setDeletingId(topic.id);
     try {
       await deleteTopic(topic.id);
       setConfirmingId(null);
@@ -136,11 +138,14 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
       setError(
         err instanceof Error ? err.message : "Could not delete the topic."
       );
+    } finally {
+      setDeletingId(null);
     }
   }
 
   async function handleDeleteDeck(deck: Deck) {
     setError(null);
+    setDeletingId(deck.id);
     try {
       await deleteDeck(deck.id);
       setConfirmingDeckId(null);
@@ -149,11 +154,14 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
       setError(
         err instanceof Error ? err.message : "Could not delete the deck."
       );
+    } finally {
+      setDeletingId(null);
     }
   }
 
   async function handleDeleteSource(source: Source) {
     setError(null);
+    setDeletingId(source.id);
     try {
       await deleteSource(source.id);
       setConfirmingSourceId(null);
@@ -162,6 +170,8 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
       setError(
         err instanceof Error ? err.message : "Could not delete the source."
       );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -332,6 +342,7 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
                       </p>
                       <div className="flex gap-2">
                         <Button
+                          disabled={deletingId === topic.id}
                           onClick={() => setConfirmingId(null)}
                           size="sm"
                           variant="outline"
@@ -339,11 +350,12 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
                           Cancel
                         </Button>
                         <Button
+                          disabled={deletingId === topic.id}
                           onClick={() => void handleDelete(topic)}
                           size="sm"
                           variant="destructive"
                         >
-                          Delete
+                          {deletingId === topic.id ? "Deleting…" : "Delete"}
                         </Button>
                       </div>
                     </div>
@@ -423,6 +435,7 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
                       </p>
                       <div className="flex gap-2">
                         <Button
+                          disabled={deletingId === source.id}
                           onClick={() => setConfirmingSourceId(null)}
                           size="sm"
                           variant="outline"
@@ -430,11 +443,12 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
                           Cancel
                         </Button>
                         <Button
+                          disabled={deletingId === source.id}
                           onClick={() => void handleDeleteSource(source)}
                           size="sm"
                           variant="destructive"
                         >
-                          Delete
+                          {deletingId === source.id ? "Deleting…" : "Delete"}
                         </Button>
                       </div>
                     </div>
@@ -535,20 +549,22 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
                           Delete this deck?
                         </p>
                         <div className="flex gap-2">
-                          <Button
-                            onClick={() => setConfirmingDeckId(null)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={() => void handleDeleteDeck(deck)}
-                            size="sm"
-                            variant="destructive"
-                          >
-                            Delete
-                          </Button>
+                        <Button
+                          disabled={deletingId === deck.id}
+                          onClick={() => setConfirmingDeckId(null)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          disabled={deletingId === deck.id}
+                          onClick={() => void handleDeleteDeck(deck)}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          {deletingId === deck.id ? "Deleting…" : "Delete"}
+                        </Button>
                         </div>
                       </div>
                     ) : (

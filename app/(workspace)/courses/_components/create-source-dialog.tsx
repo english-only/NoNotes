@@ -17,7 +17,6 @@ import {
   createSource,
 } from "@/lib/db/repositories/source-repository";
 import { processSource } from "@/lib/ingestion/processor";
-import { extractPdfText } from "@/lib/ingestion/pdf-extractor";
 import { extractUrlContent } from "@/lib/ingestion/url-extractor";
 
 type SourceType = "text" | "markdown" | "pdf" | "url";
@@ -79,6 +78,9 @@ export function CreateSourceDialog({
         setProcessingMessage("Extracting text from PDF...");
         try {
           const arrayBuffer = await selectedFile.arrayBuffer();
+          const { extractPdfText } = await import(
+            "@/lib/ingestion/pdf-extractor"
+          );
           const result = await extractPdfText(arrayBuffer, selectedFile.name);
           rawContent = result.text;
           // Use PDF title if no custom title provided
@@ -246,7 +248,7 @@ export function CreateSourceDialog({
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Maximum file size: 10 MB. Scanned/image-only PDFs are not supported.
+                Maximum file size: 70 MB. Scanned/image-only PDFs are not supported.
               </p>
             </div>
           )}

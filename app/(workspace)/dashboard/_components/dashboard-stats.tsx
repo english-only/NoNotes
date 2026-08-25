@@ -8,9 +8,11 @@ import {
   Clock3,
   Sparkles,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { staggerList, SHORT } from "@/lib/motion";
 import { db } from "@/lib/db/client";
 
 type Status = "loading" | "ready" | "error";
@@ -148,12 +150,19 @@ export function DashboardStats() {
         aria-label="Study overview"
         className="grid gap-3 md:grid-cols-3"
       >
-        {overview.map((item) => {
+        {overview.map((item, i) => {
           const Icon = item.icon;
           return (
+            <motion.div
+              key={item.label}
+              variants={staggerList()}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              transition={SHORT}
+            >
             <div
               className="border border-border/80 bg-card/70 p-5 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.8)]"
-              key={item.label}
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{item.label}</p>
@@ -166,6 +175,7 @@ export function DashboardStats() {
                 {item.detail}
               </p>
             </div>
+            </motion.div>
           );
         })}
       </section>

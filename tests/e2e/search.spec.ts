@@ -10,8 +10,10 @@ test.describe("Search", () => {
   test("clicking search button opens the command palette", async ({ page }) => {
     await gotoAndClear(page, "/dashboard");
     await page.getByRole("button", { name: "Open search" }).click();
-    await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
-    await expect(page.getByRole("dialog", { name: "Search" }).getByRole("textbox")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Search" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute("aria-modal", "true");
+    await expect(dialog.getByRole("textbox")).toBeFocused();
   });
 
   test("Cmd+K opens the command palette", async ({ page }) => {
@@ -26,12 +28,14 @@ test.describe("Search", () => {
     await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
   });
 
-  test("Escape closes the command palette", async ({ page }) => {
+  test("Escape closes the command palette and returns focus", async ({ page }) => {
     await gotoAndClear(page, "/dashboard");
-    await page.getByRole("button", { name: "Open search" }).click();
+    const trigger = page.getByRole("button", { name: "Open search" });
+    await trigger.click();
     await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: "Search" })).not.toBeVisible();
+    await expect(trigger).toBeFocused();
   });
 
   test("searching finds courses", async ({ page }) => {
@@ -40,7 +44,9 @@ test.describe("Search", () => {
     await page.getByRole("button", { name: "Open search" }).click();
     await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Biology");
     // Wait for debounced search to show results
-    await expect(page.getByRole("option", { name: /Biology 101/ })).toBeVisible({ timeout: 5000 });
+    const result = page.getByRole("option", { name: /Biology 101/ });
+    await expect(result).toBeVisible({ timeout: 5000 });
+    await expect(result).toHaveAttribute("aria-selected", "true");
   });
 
   test("searching finds flashcards", async ({ page }) => {

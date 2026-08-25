@@ -146,7 +146,7 @@ export function CreateCourseDialog({
                   type="button"
                   variant="outline"
                 >
-                  Close
+                  Done
                 </Button>
                 <Link
                   className={cn(

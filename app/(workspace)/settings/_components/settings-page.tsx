@@ -68,14 +68,18 @@ export function SettingsPage() {
 
   // ── Export state ─────────────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
+    setExportError(null);
     try {
       const data = await exportAllData();
       downloadExport(data);
-    } catch {
-      // Export failure is non-critical but user should know
+    } catch (err) {
+      setExportError(
+        err instanceof Error ? err.message : "Could not export your data.",
+      );
     } finally {
       setExporting(false);
     }
@@ -159,6 +163,7 @@ export function SettingsPage() {
   // ── Data reset ───────────────────────────────────────────────────
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   const handleReset = useCallback(async () => {
     if (!resetConfirm) {
@@ -166,12 +171,14 @@ export function SettingsPage() {
       return;
     }
     setResetting(true);
+    setResetError(null);
     try {
       await clearAllData();
       window.location.reload();
-    } catch {
-      // Reset failure is critical but we handle it simply
-    } finally {
+    } catch (err) {
+      setResetError(
+        err instanceof Error ? err.message : "Could not reset your data.",
+      );
       setResetting(false);
     }
   }, [resetConfirm]);
@@ -295,6 +302,11 @@ export function SettingsPage() {
             )}
             {exporting ? "Exporting..." : "Export all data"}
           </Button>
+          {exportError && (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {exportError}
+            </p>
+          )}
         </div>
       </section>
 
@@ -487,7 +499,11 @@ export function SettingsPage() {
             onClick={handleReset}
             variant="destructive"
           >
-            {resetConfirm ? "Confirm delete all data" : "Delete all data"}
+            {resetting
+              ? "Deleting…"
+              : resetConfirm
+                ? "Confirm delete all data"
+                : "Delete all data"}
           </Button>
           {resetConfirm && (
             <Button
@@ -497,6 +513,11 @@ export function SettingsPage() {
             >
               Cancel
             </Button>
+          )}
+          {resetError && (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {resetError}
+            </p>
           )}
         </div>
       </section>
