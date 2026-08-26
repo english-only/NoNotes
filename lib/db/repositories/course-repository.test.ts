@@ -51,6 +51,16 @@ describe("course repository", () => {
       await expect(createCourse({ title: "   " })).rejects.toThrow(/title/i);
       await expect(createCourse({ title: "" })).rejects.toThrow(/title/i);
     });
+
+    it("creates independent records for concurrent calls (UI savingRef prevents duplicates)", async () => {
+      const [a, b] = await Promise.all([
+        createCourse({ title: "Concurrent A" }),
+        createCourse({ title: "Concurrent B" }),
+      ]);
+      expect(a.id).not.toBe(b.id);
+      const courses = await listCourses();
+      expect(courses).toHaveLength(2);
+    });
   });
 
   describe("listCourses", () => {

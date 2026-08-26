@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
@@ -42,6 +42,12 @@ export function CreateCourseDialog({
   const [saving, setSaving] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
+  const savingRef = useRef(false);
+
+  // Release the saving lock when the dialog opens so a fresh submission can proceed.
+  useEffect(() => {
+    if (open) savingRef.current = false;
+  }, [open]);
 
   // Reset the form on every open transition so stale values never leak
   // between create/edit targets or between successive opens.
@@ -60,6 +66,8 @@ export function CreateCourseDialog({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     setError(null);
     try {
@@ -77,6 +85,7 @@ export function CreateCourseDialog({
         err instanceof Error ? err.message : "Could not save the course."
       );
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
