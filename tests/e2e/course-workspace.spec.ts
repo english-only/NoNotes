@@ -12,7 +12,11 @@ test.describe("Course Workspace", () => {
   test("loads course workspace", async ({ page }) => {
     await page.goto(`/courses/${courseId}`);
     await waitForDB(page);
-    await expect(page.getByText("Biology 101")).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Biology 101" })
+    ).toBeVisible({ timeout: 10000 });
+    // Breadcrumb parent path is visible too.
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
   });
 
   test("shows empty states for topics, decks, sources", async ({ page }) => {

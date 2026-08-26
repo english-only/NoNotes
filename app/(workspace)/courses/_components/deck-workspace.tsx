@@ -210,13 +210,36 @@ export function DeckWorkspace({
     <div className={containerClassName}>
       <section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
         <div className="max-w-2xl">
-          <Link
-            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            href={`/courses/${courseId}`}
-          >
-            <ArrowLeft aria-hidden="true" className="size-4" />
-            {course.title}
-          </Link>
+          <nav aria-label="Breadcrumb" className="mb-4">
+            <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+              <li>
+                <Link
+                  className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+                  href="/courses"
+                >
+                  <ArrowLeft aria-hidden="true" className="size-4" />
+                  Courses
+                </Link>
+              </li>
+              <li aria-hidden="true" className="text-muted-foreground/50">
+                /
+              </li>
+              <li className="min-w-0 truncate">
+                <Link
+                  className="transition-colors hover:text-foreground"
+                  href={`/courses/${courseId}`}
+                >
+                  {course.title}
+                </Link>
+              </li>
+              <li aria-hidden="true" className="text-muted-foreground/50">
+                /
+              </li>
+              <li aria-current="page" className="truncate text-foreground">
+                {deck.title}
+              </li>
+            </ol>
+          </nav>
           <p className="mb-3 text-xs font-medium tracking-[0.18em] text-primary uppercase">
             Deck workspace
           </p>

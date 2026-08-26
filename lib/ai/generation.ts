@@ -4,10 +4,12 @@ import { listChunksBySource } from "@/lib/db/repositories/chunk-repository";
 import { getDeck } from "@/lib/db/repositories/deck-repository";
 import { getCourse } from "@/lib/db/repositories/course-repository";
 import { db } from "@/lib/db/client";
+import { generateFlashcards as generateViaRegistry } from "./registry";
 import type { AIProvider, FlashcardGenerationOutput } from "./provider";
 
 export type GenerateFromSourceInput = {
-  provider: AIProvider;
+  /** Optional explicit provider. When omitted, the configured provider chain is used. */
+  provider?: AIProvider;
   sourceId: string;
   deckId: string;
   cardCount: number;
@@ -52,14 +54,20 @@ export async function generateFromSource(
     throw new Error("Source has no chunks to generate from");
   }
 
-  // Call the AI provider
-  const output: FlashcardGenerationOutput =
-    await input.provider.generateFlashcards({
-      chunks: chunks.map((c) => ({ ordinal: c.ordinal, content: c.content })),
-      deckTitle: deck.title,
-      courseTitle: course?.title ?? "Unknown course",
-      cardCount: input.cardCount,
-    });
+  // Call the AI provider (explicit instance, or the configured chain).
+  const output: FlashcardGenerationOutput = input.provider
+    ? await input.provider.generateFlashcards({
+        chunks: chunks.map((c) => ({ ordinal: c.ordinal, content: c.content })),
+        deckTitle: deck.title,
+        courseTitle: course?.title ?? "Unknown course",
+        cardCount: input.cardCount,
+      })
+    : await generateViaRegistry({
+        chunks: chunks.map((c) => ({ ordinal: c.ordinal, content: c.content })),
+        deckTitle: deck.title,
+        courseTitle: course?.title ?? "Unknown course",
+        cardCount: input.cardCount,
+      });
 
   // Validate and trim each card
   const validated = output.flashcards

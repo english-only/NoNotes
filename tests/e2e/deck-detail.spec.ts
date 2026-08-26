@@ -14,8 +14,11 @@ test.describe("Deck Detail", () => {
   test("loads deck workspace", async ({ page }) => {
     await page.goto(`/courses/${courseId}/decks/${deckId}`);
     await waitForDB(page);
-    await expect(page.getByText("Bio Deck")).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Bio Deck" })
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Deck workspace")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
   });
 
   test("shows empty state for cards", async ({ page }) => {

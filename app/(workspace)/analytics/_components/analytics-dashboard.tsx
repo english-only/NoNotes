@@ -13,122 +13,30 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { db } from "@/lib/db/client";
+import { db } from "@/lib/db/client"
+import { computeAnalytics, analyticsWindow } from "@/lib/analytics";
+import type { AnalyticsData } from "@/lib/analytics";
 
 type Status = "loading" | "ready" | "error";
 
-type DeckStats = {
-  deckId: string;
-  deckTitle: string;
-  totalCards: number;
-  dueCards: number;
-  againCount: number;
-  goodCount: number;
-  averageStability: number;
-};
-
-type AnalyticsData = {
-  totalCards: number;
-  totalReviews: number;
-  totalSources: number;
-  dueCards: number;
-  averageStability: number;
-  ratingDistribution: { again: number; hard: number; good: number; easy: number };
-  recentActivity: number;
-  masteryPercent: number;
-  weakDecks: DeckStats[];
-  recentReviews: number;
-};
-
 async function fetchAnalytics(): Promise<AnalyticsData> {
-  const now = Date.now();
-  const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const { now, oneWeekAgo } = analyticsWindow();
 
-  const [totalCards, totalReviews, totalSources, dueCards, allFlashcards, recentLogs] =
-    await Promise.all([
-      db.flashcards.count(),
-      db.reviewLogs.count(),
-      db.sources.count(),
-      db.flashcards.where("dueAt").belowOrEqual(now).count(),
-      db.flashcards.toArray(),
-      db.reviewLogs.where("reviewedAt").above(oneWeekAgo).toArray(),
-    ]);
+  const [allFlashcards, allLogs, decks, totalSources] = await Promise.all([
+    db.flashcards.toArray(),
+    db.reviewLogs.toArray(),
+    db.decks.toArray(),
+    db.sources.count(),
+  ]);
 
-  // Rating distribution
-  const ratingDistribution = { again: 0, hard: 0, good: 0, easy: 0 };
-  const allLogs = await db.reviewLogs.toArray();
-  for (const log of allLogs) {
-    if (log.rating === 1) ratingDistribution.again++;
-    else if (log.rating === 2) ratingDistribution.hard++;
-    else if (log.rating === 3) ratingDistribution.good++;
-    else if (log.rating === 4) ratingDistribution.easy++;
-  }
-
-  // Average stability
-  const cardsWithFsrs = allFlashcards.filter((c) => c.fsrs && c.fsrs.stability > 0);
-  const averageStability =
-    cardsWithFsrs.length > 0
-      ? cardsWithFsrs.reduce((sum, c) => sum + c.fsrs.stability, 0) /
-        cardsWithFsrs.length
-      : 0;
-
-  // Mastery: cards in Review state (state === 2) / total
-  const masteredCards = allFlashcards.filter(
-    (c) => c.fsrs && c.fsrs.state === 2
-  ).length;
-  const masteryPercent =
-    totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0;
-
-  // Per-deck stats for weak-deck identification
-  const decks = await db.decks.toArray();
-  const weakDecks: DeckStats[] = [];
-
-  for (const deck of decks) {
-    const deckCards = allFlashcards.filter((c) => c.deckId === deck.id);
-    if (deckCards.length === 0) continue;
-
-    const deckDue = deckCards.filter((c) => c.dueAt <= now).length;
-    const deckLogs = allLogs.filter((log) => {
-      const card = allFlashcards.find((c) => c.id === log.flashcardId);
-      return card?.deckId === deck.id;
-    });
-
-    const againCount = deckLogs.filter((l) => l.rating === 1).length;
-    const goodCount = deckLogs.filter((l) => l.rating === 3).length;
-    const avgStability =
-      deckCards.filter((c) => c.fsrs && c.fsrs.stability > 0).length > 0
-        ? deckCards
-            .filter((c) => c.fsrs && c.fsrs.stability > 0)
-            .reduce((sum, c) => sum + c.fsrs.stability, 0) /
-          deckCards.filter((c) => c.fsrs && c.fsrs.stability > 0).length
-        : 0;
-
-    weakDecks.push({
-      deckId: deck.id,
-      deckTitle: deck.title,
-      totalCards: deckCards.length,
-      dueCards: deckDue,
-      againCount,
-      goodCount,
-      averageStability: Math.round(avgStability * 100) / 100,
-    });
-  }
-
-  // Sort weak decks: high again count + high due count = needs attention
-  weakDecks.sort((a, b) => b.againCount - a.againCount || b.dueCards - a.dueCards);
-
-  return {
-    totalCards,
-    totalReviews,
-    totalSources,
-    dueCards,
-    averageStability: Math.round(averageStability * 100) / 100,
-    ratingDistribution,
-    recentActivity: recentLogs.length,
-    masteryPercent,
-    weakDecks: weakDecks.slice(0, 5),
-    recentReviews: recentLogs.length,
-  };
+  return computeAnalytics({
+    now,
+    oneWeekAgo,
+    allFlashcards,
+    allLogs,
+    decks,
+    sourceCount: totalSources,
+  });
 }
 
 export function AnalyticsDashboard() {

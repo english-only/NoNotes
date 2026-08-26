@@ -76,6 +76,76 @@ describe("POST /api/extract-url", () => {
     expect(response.status).toBe(403);
   });
 
+  it("blocks IPv4-mapped IPv6 loopback (::ffff:127.0.0.1)", async () => {
+    const response = await POST(
+      createRequest({ url: "http://[::ffff:127.0.0.1]/admin" })
+    );
+    expect(response.status).toBe(403);
+  });
+
+  it("blocks IPv4-mapped IPv6 loopback in hex form (::ffff:7f00:1)", async () => {
+    const response = await POST(
+      createRequest({ url: "http://[0:0:0:0:0:ffff:7f00:1]/admin" })
+    );
+    expect(response.status).toBe(403);
+  });
+
+  it("blocks IPv6 loopback [::1]", async () => {
+    const response = await POST(createRequest({ url: "http://[::1]/" }));
+    expect(response.status).toBe(403);
+  });
+
+  it("blocks IPv6 unique-local (ULA) addresses", async () => {
+    const response = await POST(createRequest({ url: "http://[fc00::1]/" }));
+    expect(response.status).toBe(403);
+  });
+
+  it("blocks IPv6 link-local addresses", async () => {
+    const response = await POST(createRequest({ url: "http://[fe80::1]/" }));
+    expect(response.status).toBe(403);
+  });
+
+  it("blocks redirect to IPv4-mapped IPv6 loopback (SSRF via redirect)", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 302,
+      statusText: "Found",
+      headers: new Headers({ location: "http://[::ffff:127.0.0.1]:5432/admin" }),
+    });
+
+    const response = await POST(createRequest({ url: "https://evil.com/redirect" }));
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.error).toContain("Redirect leads to a private");
+  });
+
+  it("allows public IPv6 destinations", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: new Headers({ "content-type": "text/html" }),
+      body: {
+        getReader: () => ({
+          read: vi
+            .fn()
+            .mockResolvedValueOnce({
+              done: false,
+              value: new TextEncoder().encode(
+                "<html><body>Public IPv6 content</body></html>"
+              ),
+            })
+            .mockResolvedValueOnce({ done: true }),
+        }),
+      },
+    });
+
+    const response = await POST(
+      createRequest({ url: "http://[2606:4700:4700::1111]/" })
+    );
+    expect(response.status).toBe(200);
+  });
+
   it("blocks non-http protocols", async () => {
     const response = await POST(createRequest({ url: "ftp://example.com" }));
     expect(response.status).toBe(400);

@@ -14,6 +14,96 @@ const ALLOWED_CONTENT_TYPES = [
   "application/xhtml+xml",
 ];
 
+/** True when the four octets describe a private/internal IPv4 address. */
+function isPrivateIPv4(octets: number[]): boolean {
+  const [a, b] = octets;
+  return (
+    a === 0 || // 0.0.0.0/8 "this network"
+    a === 10 || // 10.0.0.0/8
+    a === 127 || // 127.0.0.0/8 loopback
+    (a === 169 && b === 254) || // 169.254.0.0/16 link-local
+    (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12
+    (a === 192 && b === 168) || // 192.168.0.0/16
+    (a === 100 && b >= 64 && b <= 127) || // 100.64.0.0/10 CGNAT
+    (a === 198 && (b === 18 || b === 19)) || // 198.18.0.0/15 benchmarking
+    a >= 224 // multicast + reserved
+  );
+}
+
+/** Convert an IPv4-mapped IPv6 tail like `7f00:1` to `127.0.0.1`. */
+function ipv6MappedToIPv4(tail: string): string | null {
+  const m = tail.toLowerCase().match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (!m) return null;
+  const num = (parseInt(m[1], 16) << 16) | parseInt(m[2], 16);
+  return [
+    (num >>> 24) & 255,
+    (num >>> 16) & 255,
+    (num >>> 8) & 255,
+    num & 255,
+  ].join(".");
+}
+
+/**
+ * True when a hostname targets a private/internal/loopback/link-local
+ * destination. Handles dotted-quad IPv4, IPv6 literals (loopback, ULA,
+ * link-local, multicast, unspecified) and IPv4-mapped IPv6 such as
+ * `[::ffff:127.0.0.1]` / `[::ffff:7f00:1]`, which normalize to a form the
+ * plain hostname checks would miss.
+ */
+function isPrivateHostname(rawHostname: string): boolean {
+  const host = rawHostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (!host) return true;
+
+  // Domain-based private/internal names.
+  if (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal") ||
+    host.endsWith(".home.arpa")
+  ) {
+    return true;
+  }
+
+  // Dotted-quad IPv4 literal.
+  const dotted = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (dotted) {
+    const octets = dotted.slice(1).map(Number);
+    if (octets.some((o) => o > 255)) return true; // malformed octet: unsafe
+    return isPrivateIPv4(octets);
+  }
+
+  // IPv6 literal.
+  if (host.includes(":")) {
+    // IPv4-mapped IPv6 (`::ffff:a.b.c.d` or the canonical hex tail).
+    const mapped = host.match(/^::ffff:(.+)$/);
+    if (mapped) {
+      const tail = mapped[1];
+      const quad = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(tail);
+      if (quad) {
+        const octets = quad.slice(1).map(Number);
+        if (octets.some((o) => o > 255)) return true;
+        return isPrivateIPv4(octets);
+      }
+      const ipv4 = ipv6MappedToIPv4(tail);
+      if (ipv4) {
+        return isPrivateIPv4(ipv4.split(".").map(Number));
+      }
+      return true; // unparseable mapped tail: unsafe
+    }
+    // Unspecified and loopback.
+    if (host === "::" || host === "::1") return true;
+    // Link-local fe80::/10 — first hextet fe80–febf.
+    if (/^fe[89ab][0-9a-f]{1,4}:/.test(host)) return true;
+    // Unique local fc00::/7 — first hextet fc00–fdff.
+    if (/^f[cd][0-9a-f]{1,4}:/.test(host)) return true;
+    // Multicast ff00::/8 — first hextet ff00–ffff.
+    if (/^ff[0-9a-f]{1,4}:/.test(host)) return true;
+    return false;
+  }
+
+  return false;
+}
+
 /**
  * Extract readable text from HTML content.
  * Removes scripts, styles, navigation, and other boilerplate.
@@ -95,18 +185,7 @@ export async function POST(request: Request) {
     }
 
     // Security: block private/internal addresses on the initial URL
-    const hostname = parsedUrl.hostname.toLowerCase();
-    if (
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "0.0.0.0" ||
-      hostname.startsWith("192.168.") ||
-      hostname.startsWith("10.") ||
-      hostname.startsWith("172.") ||
-      hostname.endsWith(".local") ||
-      hostname.endsWith(".internal") ||
-      hostname === "[::1]"
-    ) {
+    if (isPrivateHostname(parsedUrl.hostname)) {
       return NextResponse.json(
         { error: "Cannot fetch private/internal URLs." },
         { status: 403 },
@@ -124,18 +203,7 @@ export async function POST(request: Request) {
     /** Check whether a URL points to a private/internal address. */
     function isPrivateUrl(urlString: string): boolean {
       try {
-        const h = new URL(urlString).hostname.toLowerCase();
-        return (
-          h === "localhost" ||
-          h === "127.0.0.1" ||
-          h === "0.0.0.0" ||
-          h.startsWith("192.168.") ||
-          h.startsWith("10.") ||
-          h.startsWith("172.") ||
-          h.endsWith(".local") ||
-          h.endsWith(".internal") ||
-          h === "[::1]"
-        );
+        return isPrivateHostname(new URL(urlString).hostname);
       } catch {
         return true; // treat unparseable URLs as unsafe
       }

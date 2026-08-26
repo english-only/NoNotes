@@ -184,6 +184,8 @@ export function CommandPalette() {
   if (!open) {
     return (
       <Button
+        aria-controls="search-results"
+        aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Open search"
         className="flex items-center gap-2 border border-border/50 bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/50"
@@ -225,11 +227,19 @@ export function CommandPalette() {
           />
           <input
             ref={inputRef}
+            aria-activedescendant={
+              results[selectedIndex]
+                ? `search-option-${results[selectedIndex].type}-${results[selectedIndex].id}`
+                : undefined
+            }
+            aria-autocomplete="list"
             aria-controls="search-results"
+            aria-expanded={results.length > 0}
             aria-label="Search"
             className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search courses, decks, flashcards..."
+            role="combobox"
             type="text"
             value={query}
           />
@@ -269,6 +279,7 @@ export function CommandPalette() {
                 className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors ${
                   i === selectedIndex ? "bg-accent/50" : "hover:bg-muted/30"
                 }`}
+                id={`search-option-${result.type}-${result.id}`}
                 onClick={() => navigateTo(result)}
                 onMouseEnter={() => setSelectedIndex(i)}
                 role="option"

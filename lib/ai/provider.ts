@@ -90,28 +90,13 @@ export interface AIProvider {
 }
 
 // ── API key management ────────────────────────────────────────────────
+// Key/config storage lives in ./config so the provider registry and settings
+// UI share one source of truth. These re-exports preserve the established
+// consumer API (call sites import getApiKey/setApiKey/etc from here).
 
-const API_KEY_STORAGE_KEY = "nonotes:ai-api-key";
-
-/** Retrieve the stored API key (client-side only). */
-export function getApiKey(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(API_KEY_STORAGE_KEY);
-}
-
-/** Store the API key (client-side only). */
-export function setApiKey(key: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(API_KEY_STORAGE_KEY, key);
-}
-
-/** Clear the stored API key. */
-export function clearApiKey(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(API_KEY_STORAGE_KEY);
-}
-
-/** Check whether an API key is configured. */
-export function hasApiKey(): boolean {
-  return getApiKey() !== null;
-}
+export {
+  getApiKey,
+  setApiKey,
+  clearApiKey,
+  hasApiKey,
+} from "./config";

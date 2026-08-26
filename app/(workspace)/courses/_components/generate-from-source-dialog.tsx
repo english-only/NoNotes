@@ -14,12 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { GeminiProvider } from "@/lib/ai/gemini";
 import {
   generateFromSource,
   persistAcceptedCards,
 } from "@/lib/ai/generation";
-import { getApiKey, hasApiKey } from "@/lib/ai/provider";
+import { isProviderConfigured, getActiveProviderLabel } from "@/lib/ai/config";
 import { listSourcesByCourse } from "@/lib/db/repositories/source-repository";
 import { listChunksBySource } from "@/lib/db/repositories/chunk-repository";
 import type { Source } from "@/lib/db/schema";
@@ -110,21 +109,18 @@ export function GenerateFromSourceDialog({
   }, [selectedSourceId]);
 
   const handleGenerate = useCallback(async () => {
-    if (!hasApiKey()) {
-      setError("Please set your Gemini API key in Settings first.");
+    if (!isProviderConfigured()) {
+      setError(
+        `No ${getActiveProviderLabel()} connection configured. Add an API key in Settings first.`
+      );
       return;
     }
 
-    const apiKey = getApiKey();
-    if (!apiKey) return;
-
-    const provider = new GeminiProvider(apiKey);
     setStep("generating");
     setError(null);
 
     try {
       const result = await generateFromSource({
-        provider,
         sourceId: selectedSourceId,
         deckId,
         cardCount,
@@ -147,7 +143,6 @@ export function GenerateFromSourceDialog({
       setStep("select");
     }
   }, [selectedSourceId, deckId, cardCount]);
-
   const handlePersist = useCallback(async () => {
     setStep("persisting");
     setError(null);

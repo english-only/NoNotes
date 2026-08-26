@@ -19,9 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getApiKey, hasApiKey } from "@/lib/ai/provider";
-import { GeminiProvider } from "@/lib/ai/gemini";
-import { evaluateExplanation } from "@/lib/ai/evaluation";
+import { isProviderConfigured, getActiveProviderLabel } from "@/lib/ai/config";
+import { evaluateExplanation } from "@/lib/ai/registry";
 import { listCourses } from "@/lib/db/repositories/course-repository";
 import { listSourcesByCourse } from "@/lib/db/repositories/source-repository";
 import { listChunksBySource } from "@/lib/db/repositories/chunk-repository";
@@ -119,7 +118,7 @@ export function FeynmanEvaluation() {
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
 
-    if (!hasApiKey()) {
+    if (!isProviderConfigured()) {
       setApiKeyMissing(true);
       return;
     }
@@ -161,12 +160,9 @@ export function FeynmanEvaluation() {
         );
       }
 
-      const apiKey = getApiKey()!;
-      const provider = new GeminiProvider(apiKey);
       const course = courses.find((c) => c.id === selectedCourseId);
 
       const result = await evaluateExplanation({
-        provider,
         chunks,
         concept: concept.trim(),
         explanation: explanation.trim(),
@@ -325,7 +321,7 @@ export function FeynmanEvaluation() {
               className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-300"
               role="alert"
             >
-              Please set your Gemini API key in{" "}
+              Please connect an AI provider ({getActiveProviderLabel()}) in{" "}
               <Link className="underline" href="/settings">
                 Settings
               </Link>{" "}

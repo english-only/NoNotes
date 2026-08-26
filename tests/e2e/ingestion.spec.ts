@@ -133,6 +133,6 @@ test.describe("Ingestion", () => {
     await page.getByLabel("Title").fill("Mobile Source");
     await page.getByLabel("Content").fill("Mobile content.");
     await page.getByRole("button", { name: /Add source/i }).last().click();
-    await expect(page.getByText("Mobile Source")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Mobile Source", { exact: true })).toBeVisible({ timeout: 5000 });
   });
 });

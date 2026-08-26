@@ -85,7 +85,7 @@ test.describe("Settings — Export", () => {
       const fs = await import("fs");
       const content = JSON.parse(fs.readFileSync(path, "utf-8"));
       expect(content.schemaVersion).toBe(1);
-      expect(content.appVersion).toBe("1.0.0-rc.1");
+      expect(content.appVersion).toBe("1.0.0-rc.2");
       expect(content.exportedAt).toBeTruthy();
       expect(content.courses).toBeDefined();
       expect(content.flashcards).toBeDefined();
@@ -295,23 +295,24 @@ test.describe("Settings — Danger Zone", () => {
 });
 
 test.describe("Settings — API Key", () => {
-  test("API key section loads", async ({ page }) => {
+  test("API key section loads with provider picker", async ({ page }) => {
     await gotoAndClear(page, "/settings");
-    await expect(page.getByText("AI Provider")).toBeVisible();
-    await expect(page.getByLabel(/gemini api key/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI Provider" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Gemini/i })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /OpenAI-compatible/i })).toBeVisible();
   });
 
-  test("save and clear API key", async ({ page }) => {
+  test("add and remove a Gemini API key", async ({ page }) => {
     await gotoAndClear(page, "/settings");
 
-    // Enter a key
-    await page.getByLabel(/gemini api key/i).fill("test-key-12345");
-    await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByText("API key saved.")).toBeVisible();
+    // Add a key
+    await page.getByLabel("New Gemini API key").fill("test-key-12345");
+    await page.getByRole("button", { name: /Add/i }).click();
+    await expect(page.getByLabel("Gemini API key", { exact: true })).toBeVisible();
 
-    // Clear it
-    await page.getByRole("button", { name: /clear api key/i }).click();
-    await expect(page.getByText("API key cleared.")).toBeVisible();
+    // Remove it
+    await page.getByRole("button", { name: /Remove Gemini API key/i }).click();
+    await expect(page.getByLabel("Gemini API key", { exact: true })).not.toBeVisible();
   });
 });
 

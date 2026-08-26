@@ -1,25 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, startTransition, useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  Key,
-  Trash2,
-  Download,
-  Upload,
-  AlertTriangle,
-  Database,
-  RefreshCw,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Download, Upload, AlertTriangle, Database, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  clearApiKey,
-  getApiKey,
-  setApiKey,
-} from "@/lib/ai/provider";
+import { AiProviderSection } from "@/app/(workspace)/settings/_components/ai-provider-section";
 import {
   exportAllData,
   downloadExport,
@@ -34,38 +19,6 @@ import {
 } from "@/lib/data-import";
 
 export function SettingsPage() {
-  // ── API Key state ────────────────────────────────────────────────
-  const [apiKey, setApiKeyState] = useState("");
-  const [showKey, setShowKey] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    startTransition(() => {
-      setApiKeyState(getApiKey() ?? "");
-    });
-  }, []);
-
-  const handleSave = useCallback(() => {
-    const trimmed = apiKey.trim();
-    if (trimmed) {
-      setApiKey(trimmed);
-      setApiKeyState(trimmed);
-    } else {
-      clearApiKey();
-      setApiKeyState("");
-    }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [apiKey]);
-
-  const handleClear = useCallback(() => {
-    clearApiKey();
-    setApiKeyState("");
-    setShowKey(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, []);
-
   // ── Export state ─────────────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -197,83 +150,7 @@ export function SettingsPage() {
       </section>
 
       {/* ── AI Provider ──────────────────────────────────────────── */}
-      <section className="border border-border/80 bg-card/60 p-6">
-        <div className="flex items-center gap-3">
-          <Key aria-hidden="true" className="size-5 text-primary" />
-          <div>
-            <h2 className="font-heading text-lg font-semibold">
-              AI Provider
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Configure your Gemini API key to enable AI-powered flashcard
-              generation. Your key is stored locally in your browser and never
-              sent to our servers.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" htmlFor="api-key">
-              Gemini API Key
-            </label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  id="api-key"
-                  onChange={(e) => {
-                    setApiKeyState(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="AIza..."
-                  type={showKey ? "text" : "password"}
-                  value={apiKey}
-                />
-                <Button
-                  aria-label={showKey ? "Hide API key" : "Show API key"}
-                  className="absolute top-1/2 right-1 -translate-y-1/2"
-                  onClick={() => setShowKey(!showKey)}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  {showKey ? (
-                    <EyeOff aria-hidden="true" className="size-4" />
-                  ) : (
-                    <Eye aria-hidden="true" className="size-4" />
-                  )}
-                </Button>
-              </div>
-              <Button onClick={handleSave} variant="outline">
-                Save
-              </Button>
-              {apiKey.length > 0 && (
-                <Button aria-label="Clear API key" onClick={handleClear} variant="ghost">
-                  <Trash2 aria-hidden="true" className="size-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {saved && (
-            <p className="text-sm text-emerald-400" role="status">
-              {apiKey.trim() ? "API key saved." : "API key cleared."}
-            </p>
-          )}
-
-          <p className="text-xs text-muted-foreground">
-            Get a free API key at{" "}
-            <a
-              className="text-primary underline underline-offset-2 hover:text-foreground"
-              href="https://aistudio.google.com/apikey"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Google AI Studio
-            </a>
-            . No credit card required.
-          </p>
-        </div>
-      </section>
+      <AiProviderSection />
 
       {/* ── Data Export ──────────────────────────────────────────── */}
       <section className="border border-border/80 bg-card/60 p-6">
@@ -532,8 +409,10 @@ export function SettingsPage() {
             generation (which requires your own API key).
           </p>
           <p>
-            Your API key is stored in localStorage and is only used to make
-            direct requests to Google&apos;s Gemini API from your browser.
+            Your API keys are stored in localStorage and are only used to
+            make direct requests to the AI provider you configure from your
+            browser. Keys are never exported and never sent to NoNotes
+            servers.
           </p>
         </div>
       </section>

@@ -12,7 +12,7 @@ import {
   type FlashcardGenerationOutput,
 } from "./provider";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 
 /**
  * Build the prompt that instructs Gemini to generate flashcards grounded
@@ -55,9 +55,11 @@ export class GeminiProvider implements AIProvider {
   readonly name = "gemini";
 
   private client: GoogleGenAI;
+  private model: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: string) {
     this.client = new GoogleGenAI({ apiKey });
+    this.model = model && model.trim().length > 0 ? model.trim() : DEFAULT_GEMINI_MODEL;
   }
 
   async generateFlashcards(
@@ -69,7 +71,7 @@ export class GeminiProvider implements AIProvider {
     const prompt = buildPrompt(validatedInput);
 
     const response = await this.client.models.generateContent({
-      model: GEMINI_MODEL,
+      model: this.model,
       contents: prompt,
       config: {
         temperature: 0.7,
@@ -152,7 +154,7 @@ OUTPUT FORMAT (JSON only, no markdown fences):
     const prompt = this.buildEvaluationPrompt(validatedInput);
 
     const response = await this.client.models.generateContent({
-      model: GEMINI_MODEL,
+      model: this.model,
       contents: prompt,
       config: {
         temperature: 0.3,

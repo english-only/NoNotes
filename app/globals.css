@@ -155,3 +155,22 @@
       radial-gradient(circle at 88% 8%, var(--glow-cyan), transparent 24rem);
   }
 }
+
+/* ── Touch targets (coarse pointers only) ──────────────────────────────
+ * On touch devices, expand interactive hit areas to at least 44×44px.
+ * Desktop / fine pointers (including Playwright's default device) are
+ * unaffected, so desktop density and E2E layout stays stable.
+ */
+@media (pointer: coarse), (any-pointer: coarse) {
+  [data-slot="button"] {
+    min-height: 2.75rem; /* 44px */
+  }
+  /* Icon-only buttons (and small pills) get an adequate width too. */
+  [data-slot="button"].size-6,
+  [data-slot="button"].size-7,
+  [data-slot="button"].size-8,
+  [data-slot="button"].size-9 {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+}

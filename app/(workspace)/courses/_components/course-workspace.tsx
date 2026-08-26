@@ -248,13 +248,25 @@ export function CourseWorkspace({ courseId }: { courseId: string }) {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
       <section className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
         <div className="max-w-2xl">
-          <Link
-            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            href="/courses"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4" />
-            Courses
-          </Link>
+          <nav aria-label="Breadcrumb" className="mb-4">
+            <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+              <li>
+                <Link
+                  className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+                  href="/courses"
+                >
+                  <ArrowLeft aria-hidden="true" className="size-4" />
+                  Courses
+                </Link>
+              </li>
+              <li aria-hidden="true" className="text-muted-foreground/50">
+                /
+              </li>
+              <li aria-current="page" className="truncate text-foreground">
+                {course.title}
+              </li>
+            </ol>
+          </nav>
           <p className="mb-3 text-xs font-medium tracking-[0.18em] text-primary uppercase">
             Course workspace
           </p>

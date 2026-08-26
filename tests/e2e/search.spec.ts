@@ -13,7 +13,7 @@ test.describe("Search", () => {
     const dialog = page.getByRole("dialog", { name: "Search" });
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute("aria-modal", "true");
-    await expect(dialog.getByRole("textbox")).toBeFocused();
+    await expect(dialog.getByRole("combobox")).toBeFocused();
   });
 
   test("Cmd+K opens the command palette", async ({ page }) => {
@@ -42,7 +42,7 @@ test.describe("Search", () => {
     await gotoAndClear(page, "/dashboard");
     await seedCourse(page, "Biology 101", "Introduction to biology");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Biology");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Biology");
     // Wait for debounced search to show results
     const result = page.getByRole("option", { name: /Biology 101/ });
     await expect(result).toBeVisible({ timeout: 5000 });
@@ -55,7 +55,7 @@ test.describe("Search", () => {
     const deckId = await seedDeck(page, courseId, "Periodic Table");
     await seedFlashcard(page, deckId, "What is H2O?", "Water");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("H2O");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("H2O");
     await expect(page.getByRole("option", { name: /What is H2O/ })).toBeVisible({ timeout: 5000 });
   });
 
@@ -64,7 +64,7 @@ test.describe("Search", () => {
     const courseId = await seedCourse(page, "Physics");
     await seedDeck(page, courseId, "Quantum Mechanics");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Quantum");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Quantum");
     await expect(page.getByRole("option", { name: /Quantum Mechanics/ })).toBeVisible({ timeout: 5000 });
   });
 
@@ -73,7 +73,7 @@ test.describe("Search", () => {
     const courseId = await seedCourse(page, "Mathematics");
     await seedTopic(page, courseId, "Calculus Fundamentals");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Calculus");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Calculus");
     await expect(page.getByRole("option", { name: /Calculus Fundamentals/ })).toBeVisible({ timeout: 5000 });
   });
 
@@ -81,14 +81,14 @@ test.describe("Search", () => {
     await gotoAndClear(page, "/dashboard");
     await seedCourse(page, "Computer Science");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("computer");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("computer");
     await expect(page.getByText("Computer Science")).toBeVisible({ timeout: 5000 });
   });
 
   test("no results shows empty state", async ({ page }) => {
     await gotoAndClear(page, "/dashboard");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("xyznonexistent");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("xyznonexistent");
     await expect(page.getByText("No results found")).toBeVisible({ timeout: 5000 });
   });
 
@@ -96,7 +96,7 @@ test.describe("Search", () => {
     await gotoAndClear(page, "/dashboard");
     const courseId = await seedCourse(page, "History");
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("History");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("History");
     await expect(page.getByRole("option", { name: /History/ })).toBeVisible({ timeout: 5000 });
     await page.getByRole("option", { name: /History/ }).first().click();
     // Should navigate to the course page
@@ -107,7 +107,7 @@ test.describe("Search", () => {
     await gotoAndClear(page, "/dashboard");
     // Search before creating - should find nothing
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Zoology");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Zoology");
     await expect(page.getByText("No results found")).toBeVisible({ timeout: 5000 });
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: "Search" })).not.toBeVisible();
@@ -122,7 +122,7 @@ test.describe("Search", () => {
 
     // Search again - should now find it
     await page.getByRole("button", { name: "Open search" }).click();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Zoology");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Zoology");
     await expect(page.getByRole("option", { name: /Zoology/ })).toBeVisible({ timeout: 5000 });
   });
 
@@ -132,7 +132,7 @@ test.describe("Search", () => {
     await seedCourse(page, "Mobile Test Course");
     await page.getByRole("button", { name: "Open search" }).click();
     await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
-    await page.getByRole("dialog", { name: "Search" }).getByRole("textbox").fill("Mobile");
+    await    page.getByRole("dialog", { name: "Search" }).getByRole("combobox").fill("Mobile");
     await expect(page.getByText("Mobile Test Course")).toBeVisible({ timeout: 5000 });
   });
 });
