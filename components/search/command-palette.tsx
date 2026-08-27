@@ -74,7 +74,6 @@ export function CommandPalette() {
   useEffect(() => {
     if (open) {
       wasOpenRef.current = true;
-      // Small delay to ensure dialog is mounted
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
@@ -92,13 +91,10 @@ export function CommandPalette() {
         document.removeEventListener("keydown", handleGlobalEscape);
       };
     }
-    // Restore focus to the trigger after any close path: Escape, backdrop,
-    // close button, or selecting a result.
     if (wasOpenRef.current) {
       wasOpenRef.current = false;
       triggerRef.current?.focus();
     }
-    // Reset state when closed
     startTransition(() => {
       setQuery("");
       setResults([]);
@@ -119,7 +115,6 @@ export function CommandPalette() {
     startTransition(() => {
       setLoading(true);
     });
-    // Debounce search
     const timer = setTimeout(() => {
       void searchIndex(query).then((r) => {
         startTransition(() => {
@@ -188,14 +183,14 @@ export function CommandPalette() {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Open search"
-        className="flex items-center gap-2 border border-border/50 bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/50"
+        className="flex items-center gap-2 rounded-lg border border-border/40 bg-muted/20 px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-muted-foreground/80"
         onClick={() => setOpen(true)}
         ref={triggerRef}
         variant="ghost"
       >
-        <Search aria-hidden="true" className="size-4" />
-        <span className="hidden sm:inline">Search...</span>
-        <kbd className="hidden rounded border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
+        <Search aria-hidden="true" className="size-3.5" />
+        <span className="hidden sm:inline">Search</span>
+        <kbd className="hidden rounded-md border border-border/40 bg-muted/30 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/60 sm:inline">
           ⌘K
         </kbd>
       </Button>
@@ -207,23 +202,23 @@ export function CommandPalette() {
       {/* Backdrop */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-50 bg-black/50"
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs"
         onClick={() => setOpen(false)}
       />
 
       {/* Dialog */}
       <div
-        className="fixed left-1/2 top-[15%] z-50 w-full max-w-lg -translate-x-1/2 rounded-lg border border-border/70 bg-card shadow-2xl"
+        className="fixed left-1/2 top-[12%] z-50 w-full max-w-lg -translate-x-1/2 rounded-xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-sm"
         aria-label="Search"
         aria-modal="true"
         onKeyDown={handleKeyDown}
         role="dialog"
       >
         {/* Search input */}
-        <div className="flex items-center gap-3 border-b border-border/50 px-4">
+        <div className="flex items-center gap-3 border-b border-border/40 px-4">
           <Search
             aria-hidden="true"
-            className="size-4 shrink-0 text-muted-foreground"
+            className="size-4 shrink-0 text-muted-foreground/60"
           />
           <input
             ref={inputRef}
@@ -236,7 +231,7 @@ export function CommandPalette() {
             aria-controls="search-results"
             aria-expanded={results.length > 0}
             aria-label="Search"
-            className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/50"
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search courses, decks, flashcards..."
             role="combobox"
@@ -244,7 +239,7 @@ export function CommandPalette() {
             value={query}
           />
           {loading && (
-            <Loader2 aria-hidden="true" className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 aria-hidden="true" className="size-4 animate-spin text-muted-foreground/60" />
           )}
           <Button
             aria-label="Close search"
@@ -259,14 +254,19 @@ export function CommandPalette() {
         {/* Results */}
         <div
           aria-label="Search results"
-          className="max-h-[400px] overflow-y-auto"
+          className="max-h-[400px] overflow-y-auto scroll-fade-b"
           id="search-results"
           ref={listRef}
           role="listbox"
         >
           {query.trim() && !loading && results.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              No results found for &ldquo;{query}&rdquo;
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                No results for &ldquo;{query}&rdquo;
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground/50">
+                Try a different search term
+              </p>
             </div>
           )}
 
@@ -276,8 +276,8 @@ export function CommandPalette() {
               <button
                 key={`${result.type}-${result.id}`}
                 aria-selected={i === selectedIndex}
-                className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors ${
-                  i === selectedIndex ? "bg-accent/50" : "hover:bg-muted/30"
+                className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors duration-75 ${
+                  i === selectedIndex ? "bg-accent/40" : "hover:bg-muted/20"
                 }`}
                 id={`search-option-${result.type}-${result.id}`}
                 onClick={() => navigateTo(result)}
@@ -287,24 +287,24 @@ export function CommandPalette() {
               >
                 <Icon
                   aria-hidden="true"
-                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground/50"
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium text-foreground">
                       {result.title}
                     </span>
-                    <span className="shrink-0 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    <span className="shrink-0 rounded-md bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/70">
                       {TYPE_LABELS[result.type]}
                     </span>
                   </div>
                   {result.excerpt && (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground/60">
                       {result.excerpt}
                     </p>
                   )}
                   {result.parent && (
-                    <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                    <p className="mt-0.5 text-[10px] text-muted-foreground/40">
                       in {result.parent.title}
                     </p>
                   )}
@@ -316,7 +316,7 @@ export function CommandPalette() {
 
         {/* Footer hint */}
         {query.trim() && results.length > 0 && (
-          <div className="border-t border-border/50 px-4 py-2 text-[10px] text-muted-foreground">
+          <div className="border-t border-border/40 px-4 py-2 text-[10px] text-muted-foreground/50">
             {results.length} result{results.length !== 1 ? "s" : ""} · ↑↓ navigate · ↵ select · esc close
           </div>
         )}

@@ -18,9 +18,7 @@ const routeLabels: Record<string, string> = {
 };
 
 function resolvePageTitle(pathname: string): string {
-  // Exact match first
   if (routeLabels[pathname]) return routeLabels[pathname];
-  // Prefix match for nested routes (e.g., /courses/abc → "Courses")
   for (const [prefix, label] of Object.entries(routeLabels)) {
     if (pathname.startsWith(`${prefix}/`)) return label;
   }
@@ -30,29 +28,45 @@ function resolvePageTitle(pathname: string): string {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const pageTitle = resolvePageTitle(pathname);
+
   return (
-    <div className="app-backdrop flex min-h-screen bg-background">
+    <div className="app-backdrop flex min-h-dvh bg-background">
+      {/* Skip link */}
       <a
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:text-foreground focus:ring-2 focus:ring-ring"
         href="#main-content"
       >
         Skip to main content
       </a>
+
       <DesktopSidebar />
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/70 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
+        {/* Header */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2.5">
             <MobileNavigation />
-            <Separator className="hidden h-5 sm:block" orientation="vertical" />
-            <p className="text-sm text-muted-foreground">
-              <span className="hidden sm:inline">Study workspace / </span>
-              <span className="text-foreground">{pageTitle}</span>
-            </p>
+            <Separator className="hidden h-4 sm:block" orientation="vertical" />
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+              <span className="hidden text-muted-foreground/60 sm:inline">
+                Workspace
+              </span>
+              <span className="hidden text-muted-foreground/30 sm:inline" aria-hidden="true">
+                /
+              </span>
+              <span className="font-medium text-foreground">
+                {pageTitle}
+              </span>
+            </nav>
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground">
+
+          <div className="flex items-center gap-2">
             <CommandPalette />
           </div>
         </header>
+
+        {/* Main content */}
         <main className="min-w-0 flex-1" id="main-content" tabIndex={-1}>
           {children}
         </main>

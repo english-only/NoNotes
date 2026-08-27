@@ -43,20 +43,26 @@ export function MobileNavigation() {
         className="w-[min(19rem,calc(100vw-2rem))] border-sidebar-border bg-sidebar p-0"
         side="left"
       >
-        <SheetHeader className="border-b border-sidebar-border px-5 py-5 text-left">
+        {/* Logo header */}
+        <SheetHeader className="border-b border-sidebar-border/50 px-5 py-5 text-left">
           <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+            <div className="flex size-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
               <NotebookPen aria-hidden="true" className="size-4" />
             </div>
             <div>
-              <SheetTitle>NoNotes</SheetTitle>
-              <SheetDescription>Recall, not reread.</SheetDescription>
+              <SheetTitle className="font-heading text-sm font-semibold">
+                NoNotes
+              </SheetTitle>
+              <SheetDescription className="text-xs">
+                Recall, not reread.
+              </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <nav aria-label="Mobile navigation" className="flex flex-col gap-1 p-4">
-          <p className="px-3 pb-2 text-[0.68rem] font-medium tracking-[0.16em] text-muted-foreground/70 uppercase">
+        {/* Navigation links */}
+        <nav aria-label="Mobile navigation" className="flex flex-col gap-0.5 p-4">
+          <p className="px-3 pb-2 text-[0.68rem] font-medium tracking-[0.16em] text-muted-foreground/60 uppercase">
             Workspace
           </p>
           {navigationItems.map((item) => {
@@ -66,23 +72,26 @@ export function MobileNavigation() {
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  "group relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
                 )}
                 href={item.href}
                 key={item.href}
                 onClick={() => setOpen(false)}
               >
-                <Icon aria-hidden="true" className="size-4 text-primary" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                )}
+                <Icon aria-hidden="true" className={cn("size-4 transition-colors", active ? "text-primary" : "text-current/50")} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
 
-          <div className="my-4 h-px bg-sidebar-border" />
-          <p className="px-3 pb-2 text-[0.68rem] font-medium tracking-[0.16em] text-muted-foreground/70 uppercase">
+          <div className="my-3 h-px bg-sidebar-border/50" />
+          <p className="px-3 pb-2 text-[0.68rem] font-medium tracking-[0.16em] text-muted-foreground/60 uppercase">
             System
           </p>
           {secondaryNavigationItems.map((item) => {
@@ -92,16 +101,19 @@ export function MobileNavigation() {
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  "group relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
                 )}
                 href={item.href}
                 key={item.href}
                 onClick={() => setOpen(false)}
               >
-                <Icon aria-hidden="true" className="size-4 text-primary" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                )}
+                <Icon aria-hidden="true" className={cn("size-4 transition-colors", active ? "text-primary" : "text-current/50")} />
                 <span>{item.label}</span>
               </Link>
             );
