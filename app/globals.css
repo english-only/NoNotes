@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  --font-heading: var(--font-space-grotesk);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -27,6 +27,9 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -39,6 +42,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -62,9 +67,14 @@
   --accent: oklch(0.94 0.035 280);
   --accent-foreground: oklch(0.3 0.1 287);
   --destructive: oklch(0.58 0.22 25);
+  --success: oklch(0.44 0.14 155);
+  --warning: oklch(0.55 0.15 85);
+  --info: oklch(0.45 0.12 235);
   --border: oklch(0.89 0.02 260);
   --input: oklch(0.89 0.02 260);
   --ring: oklch(0.62 0.16 287);
+  --surface-2: oklch(0.96 0.008 260);
+  --surface-3: oklch(0.93 0.01 260);
   --chart-1: oklch(0.62 0.18 287);
   --chart-2: oklch(0.7 0.14 190);
   --chart-3: oklch(0.72 0.15 145);
@@ -84,37 +94,42 @@
 }
 
 .dark {
-  --background: oklch(0.115 0.025 260);
-  --foreground: oklch(0.94 0.012 260);
-  --card: oklch(0.145 0.028 260);
-  --card-foreground: oklch(0.94 0.012 260);
-  --popover: oklch(0.16 0.03 260);
-  --popover-foreground: oklch(0.94 0.012 260);
-  --primary: oklch(0.7 0.16 287);
-  --primary-foreground: oklch(0.14 0.025 260);
-  --secondary: oklch(0.2 0.03 260);
-  --secondary-foreground: oklch(0.9 0.015 260);
-  --muted: oklch(0.19 0.025 260);
-  --muted-foreground: oklch(0.67 0.025 260);
-  --accent: oklch(0.24 0.06 285);
-  --accent-foreground: oklch(0.87 0.08 285);
-  --destructive: oklch(0.68 0.19 25);
+  --background: oklch(0.11 0.028 260);
+  --foreground: oklch(0.935 0.015 260);
+  --card: oklch(0.15 0.03 260);
+  --card-foreground: oklch(0.935 0.015 260);
+  --popover: oklch(0.165 0.032 260);
+  --popover-foreground: oklch(0.935 0.015 260);
+  --primary: oklch(0.72 0.16 287);
+  --primary-foreground: oklch(0.13 0.025 260);
+  --secondary: oklch(0.195 0.028 260);
+  --secondary-foreground: oklch(0.88 0.018 260);
+  --muted: oklch(0.185 0.025 260);
+  --muted-foreground: oklch(0.76 0.022 260);
+  --accent: oklch(0.235 0.055 285);
+  --accent-foreground: oklch(0.88 0.08 285);
+  --destructive: oklch(0.65 0.2 25);
+  --success: oklch(0.72 0.17 155);
+  --warning: oklch(0.82 0.15 85);
+  --info: oklch(0.72 0.14 235);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.7 0.16 287);
-  --chart-1: oklch(0.7 0.16 287);
-  --chart-2: oklch(0.75 0.13 195);
-  --chart-3: oklch(0.75 0.14 145);
-  --chart-4: oklch(0.8 0.15 75);
-  --chart-5: oklch(0.75 0.16 340);
-  --sidebar: oklch(0.13 0.027 260);
-  --sidebar-foreground: oklch(0.9 0.015 260);
-  --sidebar-primary: oklch(0.7 0.16 287);
-  --sidebar-primary-foreground: oklch(0.14 0.025 260);
-  --sidebar-accent: oklch(0.22 0.05 285);
-  --sidebar-accent-foreground: oklch(0.9 0.08 285);
+  --ring: oklch(0.72 0.16 287);
+  --surface-2: oklch(0.13 0.028 260);
+  --surface-3: oklch(0.17 0.03 260);
+  --chart-1: oklch(0.72 0.16 287);
+  --chart-2: oklch(0.78 0.14 195);
+  --chart-3: oklch(0.78 0.15 155);
+  --chart-4: oklch(0.82 0.15 85);
+  --chart-5: oklch(0.72 0.16 340);
+  --sidebar: oklch(0.125 0.027 260);
+  --sidebar-foreground: oklch(0.88 0.018 260);
+  --sidebar-primary: oklch(0.72 0.16 287);
+  --sidebar-primary-foreground: oklch(0.13 0.025 260);
+  --sidebar-accent: oklch(0.215 0.05 285);
+  --sidebar-accent-foreground: oklch(0.88 0.08 285);
   --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.7 0.16 287);
+  --sidebar-ring: oklch(0.72 0.16 287);
   --glow-violet: oklch(0.55 0.19 287 / 0.16);
   --glow-cyan: oklch(0.7 0.14 195 / 0.08);
 }
@@ -129,12 +144,22 @@
   }
 
   body {
-    @apply min-h-screen bg-background text-foreground;
+    @apply min-h-screen bg-background text-foreground antialiased;
   }
 
   ::selection {
     background: var(--accent);
     color: var(--accent-foreground);
+  }
+
+  /* Global focus-visible ring — consistent across all interactive elements */
+  :focus-visible {
+    @apply ring-2 ring-ring/50 outline-none;
+  }
+
+  /* Smooth scroll for in-page anchors, respects reduced-motion via the media query below */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -156,6 +181,22 @@
   }
 }
 
+/* ── Semantic color utilities ──────────────────────────────────────
+ * Use these for inline status indicators that need a specific semantic.
+ * Prefer tokens (--success, --warning, --info) in component code.
+ */
+@layer utilities {
+  .text-success { color: var(--success); }
+  .text-warning { color: var(--warning); }
+  .text-info    { color: var(--info); }
+  .bg-success   { background-color: var(--success); }
+  .bg-warning   { background-color: var(--warning); }
+  .bg-info      { background-color: var(--info); }
+  .border-success { border-color: var(--success); }
+  .border-warning { border-color: var(--warning); }
+  .border-info    { border-color: var(--info); }
+}
+
 /* ── Touch targets (coarse pointers only) ──────────────────────────────
  * On touch devices, expand interactive hit areas to at least 44×44px.
  * Desktop / fine pointers (including Playwright's default device) are
@@ -173,4 +214,20 @@
     min-width: 2.75rem;
     min-height: 2.75rem;
   }
+}
+
+/* ── Motion tokens ─────────────────────────────────────────────────────
+ * CSS custom properties for consistent motion across the app.
+ * Components reference these rather than hardcoding duration/curve.
+ * They are NOT animation shortcuts — use them via tailwind or inline.
+ */
+:root {
+  --motion-instant: 100ms;
+  --motion-micro: 150ms;
+  --motion-short: 200ms;
+  --motion-medium: 300ms;
+  --motion-slow: 500ms;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --motion-ease-in: cubic-bezier(0.55, 0, 1, 0.45);
 }
