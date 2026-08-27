@@ -33,11 +33,11 @@ import type { Course, Deck, Flashcard } from "@/lib/db/schema";
 
 type Status = "loading" | "ready" | "error";
 
-const RATINGS: { value: Rating; label: string; hint: string }[] = [
-  { value: 1, label: "Again", hint: "Forgot it" },
-  { value: 2, label: "Hard", hint: "Took effort" },
-  { value: 3, label: "Good", hint: "Remembered" },
-  { value: 4, label: "Easy", hint: "Too easy" },
+const RATINGS: { value: Rating; label: string; hint: string; variant: "destructive" | "outline" | "default" | "secondary"; tone: string }[] = [
+  { value: 1, label: "Again", hint: "Forgot it", variant: "destructive", tone: "text-destructive" },
+  { value: 2, label: "Hard", hint: "Took effort", variant: "outline", tone: "text-warning" },
+  { value: 3, label: "Good", hint: "Remembered", variant: "default", tone: "text-success" },
+  { value: 4, label: "Easy", hint: "Too easy", variant: "secondary", tone: "text-info" },
 ];
 
 export function StudySession({ deckId }: { deckId: string }) {
@@ -239,8 +239,8 @@ export function StudySession({ deckId }: { deckId: string }) {
   if (status === "loading") {
     return (
       <div className={containerClassName}>
-        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-        <div className="mx-auto h-64 w-full animate-pulse rounded-2xl bg-muted/60" />
+        <div className="h-4 w-24 animate-pulse rounded bg-muted/50" />
+        <div className="mx-auto h-64 w-full animate-pulse rounded-2xl bg-card/30" />
       </div>
     );
   }
@@ -323,8 +323,8 @@ export function StudySession({ deckId }: { deckId: string }) {
     const nextDue = Math.min(...allCards.map((card) => card.dueAt));
     return (
       <div className={containerClassName}>
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border/80 bg-card/60 px-6 py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/40 px-6 py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl border border-success/20 bg-success/10 text-success">
             <CalendarClock aria-hidden="true" className="size-5" />
           </div>
           <h1 className="mt-4 font-heading text-lg font-semibold">
@@ -355,8 +355,8 @@ export function StudySession({ deckId }: { deckId: string }) {
   if (!session || session.phase === "complete") {
     return (
       <div className={containerClassName}>
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border/80 bg-card/60 px-6 py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/40 px-6 py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl border border-success/20 bg-success/10 text-success">
             <CheckCircle2 aria-hidden="true" className="size-5" />
           </div>
           <h1 className="mt-4 font-heading text-lg font-semibold">
@@ -413,19 +413,19 @@ export function StudySession({ deckId }: { deckId: string }) {
         </div>
         <div
           aria-hidden="true"
-          className="h-1 w-full overflow-hidden rounded-full bg-muted"
+          className="h-1 w-full overflow-hidden rounded-full bg-muted/50"
         >
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
       </header>
 
       <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col justify-center rounded-2xl border border-border/80 bg-card/70 p-6 sm:p-10">
-          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-            {session.phase === "revealed" ? "Answer" : "Prompt"}
+        <div className="flex flex-1 flex-col justify-center rounded-2xl border border-border/50 bg-card/40 p-6 transition-colors sm:p-10">
+          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground/50 uppercase">
+            {session.phase === "revealed" ? "Answer" : "Question"}
           </p>
           <p className="mt-4 font-heading text-xl leading-relaxed font-medium whitespace-pre-wrap sm:text-2xl">
             {currentCard?.prompt}
@@ -443,12 +443,12 @@ export function StudySession({ deckId }: { deckId: string }) {
             >
               <div
                 aria-hidden="true"
-                className="my-6 h-px w-full bg-border/70"
+                className="my-6 h-px w-full bg-gradient-to-r from-transparent via-border/60 to-transparent"
               />
-              <p className="text-xs font-medium tracking-[0.16em] text-primary uppercase">
+              <p className="text-xs font-medium tracking-[0.16em] text-primary/70 uppercase">
                 Answer
               </p>
-              <p className="mt-4 text-base leading-relaxed whitespace-pre-wrap text-foreground/90">
+              <p className="mt-4 text-base leading-relaxed whitespace-pre-wrap text-foreground/85">
                 {currentCard?.answer}
               </p>
             </motion.div>
@@ -488,22 +488,16 @@ export function StudySession({ deckId }: { deckId: string }) {
                 {RATINGS.map((item, index) => (
                   <Button
                     aria-keyshortcuts={String(item.value)}
-                    className="flex h-auto flex-col gap-0.5 py-3"
+                    className="flex h-auto flex-col gap-0.5 py-3 transition-all duration-150"
                     disabled={saving}
                     key={item.value}
                     onClick={() => handleRate(item.value)}
                     ref={index === 0 ? firstRatingRef : undefined}
                     size="lg"
-                    variant={
-                      item.value === 1
-                        ? "destructive"
-                        : item.value === 3
-                          ? "default"
-                          : "outline"
-                    }
+                    variant={item.variant}
                   >
                     <span>{item.label}</span>
-                    <span className="text-xs font-normal opacity-70">
+                    <span className={cn("text-xs font-normal", item.tone, "opacity-60")}>
                       {item.hint}
                     </span>
                   </Button>

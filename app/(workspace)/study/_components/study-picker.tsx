@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowUpRight, BookOpen, Layers, RefreshCw } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -96,12 +98,12 @@ export function StudyPicker() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
-            className="rounded-xl border border-border/80 bg-card/60 p-5"
+            className="rounded-xl border border-border/60 bg-card/50 p-5"
             key={index}
           >
-            <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
-            <div className="mt-3 h-3 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="mt-6 h-3 w-1/4 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="mt-3 h-3 w-2/3" />
+            <Skeleton className="mt-6 h-3 w-1/4" />
           </div>
         ))}
       </div>
@@ -131,8 +133,8 @@ export function StudyPicker() {
 
   if (decks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-20 text-center">
+        <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
           <Layers aria-hidden="true" className="size-5" />
         </div>
         <h2 className="mt-4 font-heading text-lg font-semibold">
@@ -172,16 +174,20 @@ export function StudyPicker() {
             </CardAction>
           </CardHeader>
           <CardFooter>
-            <p className="text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
               {deck.dueCount > 0 ? (
-                <span className="font-medium text-foreground">
+                <Badge variant="warning">
                   {deck.dueCount} due
-                </span>
+                </Badge>
               ) : (
-                <span className="text-emerald-300">All caught up</span>
-              )}{" "}
-              · {deck.cardCount} {deck.cardCount === 1 ? "card" : "cards"}
-            </p>
+                <Badge variant="success">
+                  All caught up
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground/60">
+                {deck.cardCount} {deck.cardCount === 1 ? "card" : "cards"}
+              </span>
+            </div>
           </CardFooter>
         </Card>
       ))}
