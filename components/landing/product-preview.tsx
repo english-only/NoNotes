@@ -15,8 +15,10 @@ export function ProductPreview() {
       className="relative mx-auto w-full max-w-4xl"
       data-product-preview
     >
-      {/* Ambient glow (landing only) */}
-      <div className="absolute -inset-x-8 -top-10 -bottom-10 rounded-full bg-primary/10 blur-3xl" />
+      {/* Ambient glow (landing only) — contained to prevent overflow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+        <div className="absolute -inset-x-8 -top-10 -bottom-10 rounded-full bg-primary/10 blur-3xl" />
+      </div>
 
       {/* Window / app frame */}
       <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl">
@@ -88,14 +90,14 @@ export function ProductPreview() {
             {/* Rating buttons */}
             <div className="mt-4 grid grid-cols-4 gap-2">
               {[
-                { label: "Again", tone: "border-destructive/40 text-destructive" },
-                { label: "Hard", tone: "border-amber-500/40 text-amber-300" },
-                { label: "Good", tone: "border-emerald-500/40 text-emerald-300" },
-                { label: "Easy", tone: "border-cyan-500/40 text-cyan-200" },
+                { label: "Again", tone: "border-destructive/30 bg-destructive/5 text-destructive" },
+                { label: "Hard", tone: "border-warning/30 bg-warning/5 text-warning" },
+                { label: "Good", tone: "border-success/30 bg-success/5 text-success" },
+                { label: "Easy", tone: "border-info/30 bg-info/5 text-info" },
               ].map(({ label, tone }) => (
                 <div
                   className={cn(
-                    "rounded-lg border border-border/60 bg-card py-2 text-center text-xs font-medium",
+                    "rounded-lg border py-2 text-center text-xs font-medium",
                     tone
                   )}
                   key={label}

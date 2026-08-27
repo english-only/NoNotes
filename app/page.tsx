@@ -158,9 +158,9 @@ export default function LandingPage() {
             initial="hidden"
             animate="visible"
           >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5">
-              <Shield aria-hidden="true" className="size-3.5 text-primary" />
-              <span className="text-xs font-medium text-primary">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.04] px-4 py-1.5">
+              <Shield aria-hidden="true" className="size-3.5 text-primary/80" />
+              <span className="text-xs font-medium text-primary/80">
                 Local-first · No account · Works offline
               </span>
             </div>
@@ -266,7 +266,7 @@ export default function LandingPage() {
                     whileInView="visible"
                     viewport={{ once: true, margin: "-50px" }}
                   >
-                    <div className="relative z-10 flex size-11 items-center justify-center rounded-full border border-primary/30 bg-card text-primary">
+                    <div className="relative z-10 flex size-11 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
                       <Icon aria-hidden="true" className="size-5" />
                     </div>
                     <div>
@@ -319,7 +319,7 @@ export default function LandingPage() {
                     <li className="flex items-start gap-2 text-sm text-foreground/90" key={item}>
                       <CheckCircle2
                         aria-hidden="true"
-                        className="mt-0.5 size-4 shrink-0 text-emerald-400"
+                        className="mt-0.5 size-4 shrink-0 text-success"
                       />
                       {item}
                     </li>
@@ -368,7 +368,7 @@ export default function LandingPage() {
                       <span className="rounded bg-destructive/10 px-2 py-0.5 text-[10px] text-destructive">
                         Reject
                       </span>
-                      <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] text-emerald-300">
+                      <span className="rounded bg-success/15 px-2 py-0.5 text-[10px] text-success">
                         Accept
                       </span>
                     </div>
@@ -434,8 +434,8 @@ export default function LandingPage() {
                   whileInView="visible"
                   viewport={{ once: true, margin: "-50px" }}
                 >
-                  <div className="flex size-10 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
-                    <Icon aria-hidden="true" className="size-5" />
+                  <div className="flex size-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary/80">
+                    <Icon aria-hidden="true" className="size-4" />
                   </div>
                   <h3 className="mt-4 font-heading text-base font-semibold">
                     {title}
@@ -468,11 +468,11 @@ export default function LandingPage() {
                     <p className="text-xs font-medium text-foreground">
                       Feedback
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-300">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded bg-success/15 px-1.5 py-0.5 text-[10px] text-success">
                         Correctness 80%
                       </span>
-                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] text-amber-300">
+                      <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">
                         Missing: chlorophyll
                       </span>
                     </div>
@@ -512,7 +512,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
             <div className="mx-auto max-w-3xl text-center">
               <Reveal>
-                <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                   <Shield aria-hidden="true" className="size-5" />
                 </div>
               </Reveal>
