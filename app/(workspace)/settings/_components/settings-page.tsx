@@ -153,7 +153,7 @@ export function SettingsPage() {
       <AiProviderSection />
 
       {/* ── Data Export ──────────────────────────────────────────── */}
-      <section className="border border-border/80 bg-card/60 p-6">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
         <div className="flex items-center gap-3">
           <Download aria-hidden="true" className="size-5 text-primary" />
           <div>
@@ -188,7 +188,7 @@ export function SettingsPage() {
       </section>
 
       {/* ── Data Import ──────────────────────────────────────────── */}
-      <section className="border border-border/80 bg-card/60 p-6">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
         <div className="flex items-center gap-3">
           <Upload aria-hidden="true" className="size-5 text-primary" />
           <div>
@@ -312,8 +312,7 @@ export function SettingsPage() {
           )}
 
           {importResult && (
-            <p
-              className={`text-sm ${importResult.startsWith("Error") || importResult.startsWith("Import failed") ? "text-destructive" : "text-emerald-400"}`}
+            <p                  className={`text-sm ${importResult.startsWith("Error") || importResult.startsWith("Import failed") ? "text-destructive" : "text-success"}`}
               role="status"
             >
               {importResult}
@@ -323,7 +322,7 @@ export function SettingsPage() {
       </section>
 
       {/* ── Storage ──────────────────────────────────────────────── */}
-      <section className="border border-border/80 bg-card/60 p-6">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
         <div className="flex items-center gap-3">
           <Database aria-hidden="true" className="size-5 text-primary" />
           <div>
@@ -356,7 +355,7 @@ export function SettingsPage() {
       </section>
 
       {/* ── Danger Zone ──────────────────────────────────────────── */}
-      <section className="border border-destructive/30 bg-destructive/5 p-6">
+      <section className="rounded-xl border border-destructive/20 bg-destructive/[0.03] p-6">
         <div className="flex items-center gap-3">
           <AlertTriangle aria-hidden="true" className="size-5 text-destructive" />
           <div>
@@ -400,7 +399,7 @@ export function SettingsPage() {
       </section>
 
       {/* ── Privacy ──────────────────────────────────────────────── */}
-      <section className="border border-border/80 bg-card/60 p-6">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
         <h2 className="font-heading text-lg font-semibold">Privacy</h2>
         <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
           <p>

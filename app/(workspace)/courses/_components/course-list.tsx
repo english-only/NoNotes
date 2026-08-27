@@ -6,6 +6,7 @@ import { BookOpen, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardAction,
@@ -101,12 +102,12 @@ export function CourseList() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
-            className="rounded-xl border border-border/80 bg-card/60 p-5"
+            className="rounded-xl border border-border/60 bg-card/50 p-5"
             key={index}
           >
-            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="mt-3 h-3 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="mt-6 h-3 w-1/4 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="mt-3 h-3 w-2/3" />
+            <Skeleton className="mt-6 h-3 w-1/4" />
           </div>
         ))}
       </div>
@@ -156,14 +157,14 @@ export function CourseList() {
       )}
 
       {courses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-20 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
             <BookOpen aria-hidden="true" className="size-5" />
           </div>
           <h2 className="mt-4 font-heading text-lg font-semibold">
             No courses yet
           </h2>
-          <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">
+          <p className="mt-1.5 max-w-sm text-sm leading-6 text-muted-foreground/70">
             Create a course to give each subject a home for your study
             material.
           </p>

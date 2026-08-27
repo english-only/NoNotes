@@ -14,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { staggerList, SHORT } from "@/lib/motion";
 import { db } from "@/lib/db/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Status = "loading" | "ready" | "error";
 
@@ -28,19 +29,14 @@ async function fetchDashboardData(): Promise<DashboardData> {
   const now = Date.now();
   const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
 
-  // Due today: flashcards whose dueAt <= now
   const dueToday = await db.flashcards
     .where("dueAt")
     .belowOrEqual(now)
     .count();
 
-  // Active courses
   const activeCourses = await db.courses.count();
-
-  // Total cards
   const totalCards = await db.flashcards.count();
 
-  // Study time this week: sum of elapsedMs from recent reviewLogs
   const recentLogs = await db.reviewLogs
     .where("reviewedAt")
     .above(oneWeekAgo)
@@ -86,7 +82,9 @@ export function DashboardStats() {
           ? `${data.dueToday} ${data.dueToday === 1 ? "card" : "cards"} ready for review`
           : "Your review queue is clear.",
       icon: CheckCircle2,
-      tone: "text-emerald-300",
+      tone: "text-success",
+      bgTone: "bg-success/10",
+      borderTone: "border-success/20",
     },
     {
       label: "Active courses",
@@ -96,7 +94,9 @@ export function DashboardStats() {
           ? `${data.activeCourses} ${data.activeCourses === 1 ? "course" : "courses"} with material`
           : "Create a course to organize your material.",
       icon: BookOpen,
-      tone: "text-cyan-300",
+      tone: "text-info",
+      bgTone: "bg-info/10",
+      borderTone: "border-info/20",
     },
     {
       label: "Study time",
@@ -109,7 +109,9 @@ export function DashboardStats() {
           ? "This week"
           : "Your first session will appear here.",
       icon: Clock3,
-      tone: "text-violet-300",
+      tone: "text-primary",
+      bgTone: "bg-primary/10",
+      borderTone: "border-primary/20",
     },
   ];
 
@@ -121,12 +123,12 @@ export function DashboardStats() {
       >
         {Array.from({ length: 3 }).map((_, index) => (
           <div
-            className="border border-border/80 bg-card/70 p-5 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.8)]"
+            className="rounded-xl border border-border/60 bg-card/50 p-5"
             key={index}
           >
-            <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-            <div className="mt-5 h-8 w-12 animate-pulse rounded bg-muted" />
-            <div className="mt-2 h-3 w-32 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="mt-5 h-8 w-12" />
+            <Skeleton className="mt-2 h-3 w-32" />
           </div>
         ))}
       </section>
@@ -136,7 +138,7 @@ export function DashboardStats() {
   if (status === "error") {
     return (
       <div
-        className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         role="alert"
       >
         {error}
@@ -161,37 +163,45 @@ export function DashboardStats() {
               animate="visible"
               transition={SHORT}
             >
-            <div
-              className="border border-border/80 bg-card/70 p-5 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.8)]"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <Icon aria-hidden="true" className={cn("size-4", item.tone)} />
+              <div
+                className={cn(
+                  "rounded-xl border bg-card/50 p-5 transition-all duration-150 hover:bg-card/70",
+                  item.borderTone
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">{item.label}</p>
+                  <div className={cn("flex size-7 items-center justify-center rounded-lg", item.bgTone)}>
+                    <Icon aria-hidden="true" className={cn("size-3.5", item.tone)} />
+                  </div>
+                </div>
+                <p className="mt-4 font-heading text-3xl font-semibold tracking-tight tabular-nums">
+                  {item.value}
+                </p>
+                <p className="mt-1.5 text-xs text-muted-foreground/70">
+                  {item.detail}
+                </p>
               </div>
-              <p className="mt-5 font-heading text-3xl font-semibold tracking-tight">
-                {item.value}
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {item.detail}
-              </p>
-            </div>
             </motion.div>
           );
         })}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
-        <div className="border border-border/80 bg-card/60 p-6 sm:p-8">
+        {/* Study loop card */}
+        <div className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60 sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+              <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground/60 uppercase">
                 Your study loop
               </p>
               <h2 className="mt-2 font-heading text-xl font-semibold tracking-tight">
                 Turn raw material into recall.
               </h2>
             </div>
-            <Sparkles aria-hidden="true" className="size-5 text-primary" />
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
           </div>
           <div className="mt-8 grid gap-0 sm:grid-cols-4">
             {[
@@ -201,16 +211,16 @@ export function DashboardStats() {
               ["04", "Retain", "Review at the right time."],
             ].map(([number, title, detail], index) => (
               <div
-                className="relative border-l border-border/80 py-1 pl-4 sm:border-l-0 sm:border-t sm:pb-0 sm:pl-0 sm:pt-5"
+                className="relative border-l border-border/60 py-1 pl-4 sm:border-l-0 sm:border-t sm:pb-0 sm:pl-0 sm:pt-5"
                 key={number}
               >
-                <div className="absolute top-0 bottom-0 left-[-1px] hidden w-px bg-gradient-to-b from-primary/70 to-transparent sm:block" />
+                <div className="absolute top-0 bottom-0 left-[-1px] hidden w-px bg-gradient-to-b from-primary/60 to-transparent sm:block" />
                 {index > 0 && (
-                  <div className="absolute top-[-1px] left-0 hidden h-px w-4 bg-primary/50 sm:block" />
+                  <div className="absolute top-[-1px] left-0 hidden h-px w-4 bg-primary/40 sm:block" />
                 )}
-                <p className="text-xs font-medium text-primary">{number}</p>
+                <p className="text-xs font-medium text-primary/80">{number}</p>
                 <p className="mt-2 text-sm font-medium">{title}</p>
-                <p className="mt-1 max-w-[13rem] text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-1 max-w-[13rem] text-xs leading-relaxed text-muted-foreground/70">
                   {detail}
                 </p>
               </div>
@@ -218,15 +228,16 @@ export function DashboardStats() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between border border-primary/20 bg-primary/[0.06] p-6 sm:p-8">
+        {/* CTA card */}
+        <div className="flex flex-col justify-between rounded-xl border border-primary/15 bg-primary/[0.04] p-6 transition-colors hover:bg-primary/[0.06] sm:p-8">
           <div>
-            <p className="text-xs font-medium tracking-[0.16em] text-primary uppercase">
+            <p className="text-xs font-medium tracking-[0.16em] text-primary/80 uppercase">
               Start here
             </p>
             <h2 className="mt-2 font-heading text-xl font-semibold tracking-tight">
               Set up your first course.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground/70">
               Keep subjects separate so your cards stay focused and your progress
               stays meaningful.
             </p>

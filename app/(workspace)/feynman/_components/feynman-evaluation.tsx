@@ -37,20 +37,20 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
   return (
     <div className="flex items-center gap-3">
       <p className="w-24 text-sm text-muted-foreground">{label}</p>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/50">
         <div
           className={cn(
-            "h-full rounded-full transition-all",
+            "h-full rounded-full transition-all duration-300",
             pct >= 70
-              ? "bg-emerald-500"
+              ? "bg-success"
               : pct >= 40
-                ? "bg-amber-500"
+                ? "bg-warning"
                 : "bg-destructive"
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="w-10 text-right text-sm tabular-nums text-muted-foreground">
+      <p className="w-10 text-right text-sm tabular-nums text-muted-foreground/70">
         {pct}%
       </p>
     </div>

@@ -112,25 +112,29 @@ export function AnalyticsDashboard() {
       label: "Total cards",
       value: data?.totalCards ?? 0,
       icon: Layers,
-      tone: "text-cyan-300",
+      tone: "text-info",
+      bgTone: "bg-info/10",
     },
     {
       label: "Total reviews",
       value: data?.totalReviews ?? 0,
       icon: Target,
-      tone: "text-violet-300",
+      tone: "text-primary",
+      bgTone: "bg-primary/10",
     },
     {
       label: "Due now",
       value: data?.dueCards ?? 0,
       icon: Clock3,
-      tone: data && data.dueCards > 0 ? "text-amber-300" : "text-emerald-300",
+      tone: data && data.dueCards > 0 ? "text-warning" : "text-success",
+      bgTone: data && data.dueCards > 0 ? "bg-warning/10" : "bg-success/10",
     },
     {
       label: "Mastery",
       value: `${data?.masteryPercent ?? 0}%`,
       icon: TrendingUp,
-      tone: "text-emerald-300",
+      tone: "text-success",
+      bgTone: "bg-success/10",
     },
   ];
 
@@ -159,14 +163,16 @@ export function AnalyticsDashboard() {
           const Icon = item.icon;
           return (
             <div
-              className="border border-border/80 bg-card/70 p-5 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.8)]"
+              className="rounded-xl border border-border/60 bg-card/50 p-5 transition-colors hover:bg-card/70"
               key={item.label}
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{item.label}</p>
-                <Icon aria-hidden="true" className={cn("size-4", item.tone)} />
+                <div className={cn("flex size-7 items-center justify-center rounded-lg", item.bgTone)}>
+                  <Icon aria-hidden="true" className={cn("size-3.5", item.tone)} />
+                </div>
               </div>
-              <p className="mt-5 font-heading text-3xl font-semibold tracking-tight">
+              <p className="mt-4 font-heading text-3xl font-semibold tracking-tight tabular-nums">
                 {item.value}
               </p>
             </div>
@@ -176,8 +182,8 @@ export function AnalyticsDashboard() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         {/* Rating distribution */}
-        <div className="border border-border/80 bg-card/60 p-6">
-          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        <div className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
+          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground/60 uppercase">
             Rating distribution
           </p>
           <div className="mt-6 flex flex-col gap-3">
@@ -213,8 +219,8 @@ export function AnalyticsDashboard() {
         </div>
 
         {/* Study summary */}
-        <div className="border border-border/80 bg-card/60 p-6">
-          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        <div className="rounded-xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card/60">
+          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground/60 uppercase">
             Study summary
           </p>
           <div className="mt-6 flex flex-col gap-4">
