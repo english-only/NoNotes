@@ -47,18 +47,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2.5">
             <MobileNavigation />
             <Separator className="hidden h-4 sm:block" orientation="vertical" />
-            {/* Breadcrumb */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
-              <span className="hidden text-muted-foreground/60 sm:inline">
-                Workspace
-              </span>
-              <span className="hidden text-muted-foreground/30 sm:inline" aria-hidden="true">
-                /
-              </span>
-              <span className="font-medium text-foreground">
-                {pageTitle}
-              </span>
-            </nav>
+            {/* Page title — only shown as breadcrumb-style on non-nested routes */}
+            <p className="text-sm">
+              <span className="hidden text-muted-foreground/50 sm:inline">Workspace / </span>
+              <span className="font-medium text-foreground">{pageTitle}</span>
+            </p>
           </div>
 
           <div className="flex items-center gap-2">

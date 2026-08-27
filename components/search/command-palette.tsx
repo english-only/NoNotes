@@ -262,7 +262,7 @@ export function CommandPalette() {
           {query.trim() && !loading && results.length === 0 && (
             <div className="px-4 py-10 text-center">
               <p className="text-sm text-muted-foreground">
-                No results for &ldquo;{query}&rdquo;
+                No results found for &ldquo;{query}&rdquo;
               </p>
               <p className="mt-1 text-xs text-muted-foreground/50">
                 Try a different search term
