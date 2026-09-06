@@ -2305,9 +2305,9 @@ If implemented, the architecture should distinguish:
 
 ```text
 LOCAL SOURCE OF TRUTH
-        ↕
+        <->
 SYNC LAYER
-        ↕
+        <->
 REMOTE DATABASE
 ```
 

@@ -1,0 +1,7 @@
+interface:
+  display_name: "NoNotes Product Design"
+  short_description: "Canonical NoNotes frontend design system and quality gates"
+  brand_color: "#6366F1"
+  default_prompt: "Use $nonotes-product-design before writing any NoNotes frontend code."
+policy:
+  allow_implicit_invocation: true

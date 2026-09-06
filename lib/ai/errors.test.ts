@@ -24,9 +24,25 @@ describe("classifyProviderError", () => {
     expect(err.type).toBe("rate-limit");
   });
 
+  it("classifies HTTP 500/502/503 as unavailable (not quota)", () => {
+    for (const status of [500, 502, 503]) {
+      const err = classifyProviderError({ status }, "Gemini");
+      expect(err.type).toBe("unavailable");
+      expect(err.message).toMatch(/unavailable/i);
+    }
+  });
+
   it("classifies HTTP 408 as timeout", () => {
     const err = classifyProviderError({ status: 408 }, "Gemini");
     expect(err.type).toBe("timeout");
+  });
+
+  it("classifies 'temporarily unavailable' text as unavailable", () => {
+    const err = classifyProviderError(
+      new Error("This model is temporarily unavailable. Please retry later."),
+      "BAILU AI"
+    );
+    expect(err.type).toBe("unavailable");
   });
 
   it("classifies quota text as quota", () => {
@@ -40,8 +56,14 @@ describe("classifyProviderError", () => {
   });
 
   it("classifies fetch network failures as network", () => {
-    const err = classifyProviderError(new Error("Failed to fetch: network"), "Ollama");
-    expect(err.type).toBe("network");
+    for (const msg of [
+      "Failed to fetch: network",
+      "TypeError: Failed to fetch",
+      "fetch failed",
+    ]) {
+      const err = classifyProviderError(new Error(msg), "Ollama");
+      expect(err.type).toBe("network");
+    }
   });
 
   it("classifies JSON/parse errors as malformed", () => {
@@ -61,10 +83,11 @@ describe("classifyProviderError", () => {
 });
 
 describe("isFallbackEligible", () => {
-  it("allows credential/quota/network/timeout failures to fall back", () => {
+  it("allows credential/quota/rate-limit/unavailable/network/timeout failures to fall back", () => {
     expect(isFallbackEligible("authentication")).toBe(true);
     expect(isFallbackEligible("quota")).toBe(true);
     expect(isFallbackEligible("rate-limit")).toBe(true);
+    expect(isFallbackEligible("unavailable")).toBe(true);
     expect(isFallbackEligible("network")).toBe(true);
     expect(isFallbackEligible("timeout")).toBe(true);
   });

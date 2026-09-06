@@ -19,9 +19,31 @@ export type OpenAiCompatibleOptions = {
   displayName?: string;
   /** Request timeout in ms. */
   timeoutMs?: number;
+  /** Max attempts for transient failures (429 / 5xx / network). Default 3. */
+  retryAttempts?: number;
 };
 
 const DEFAULT_TIMEOUT_MS = 120_000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+
+/** Transient failure classes that warrant an in-provider retry. */
+const RETRYABLE_TYPES: ReadonlySet<string> = new Set([
+  "rate-limit",
+  "unavailable",
+  "network",
+]);
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Parse a `Retry-After` header value (seconds or HTTP-date → null). */
+function parseRetryAfter(raw: string | null | undefined): number | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
 
 function normalizedBaseUrl(input: string): string {
   let url = input.trim();
@@ -110,6 +132,7 @@ export class OpenAICompatibleProvider implements AIProvider {
   private apiKey: string;
   private model: string;
   private timeoutMs: number;
+  private retryAttempts: number;
 
   constructor(options: OpenAiCompatibleOptions) {
     this.displayName =
@@ -121,6 +144,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     this.apiKey = options.apiKey;
     this.model = options.model;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.retryAttempts = Math.max(1, options.retryAttempts ?? DEFAULT_RETRY_ATTEMPTS);
   }
 
   private async request(messages: ChatMessage[]): Promise<string> {
@@ -136,6 +160,46 @@ export class OpenAICompatibleProvider implements AIProvider {
       max_tokens: 8192,
     };
 
+    let attempt = 0;
+    while (true) {
+      attempt += 1;
+      const outcome = await this.tryRequest(body);
+      if (outcome.ok) return outcome.text;
+
+      const { error, retryAfterSeconds } = outcome;
+      // Only transient failures retry in place; auth/quota/malformed/timeout
+      // surface immediately (timeout already burned the full request budget).
+      if (
+        !RETRYABLE_TYPES.has(error.type) ||
+        attempt >= this.retryAttempts
+      ) {
+        throw error;
+      }
+
+      // Honor Retry-After when the provider sends it, else exponential
+      // backoff with jitter so concurrent clients don't thundering-herd.
+      const delayMs =
+        retryAfterSeconds !== null
+          ? retryAfterSeconds * 1000
+          : Math.min(8_000, 1_000 * 2 ** (attempt - 1)) + Math.random() * 200;
+      await sleep(delayMs);
+    }
+  }
+
+  /**
+   * One HTTP attempt. Returns the raw text on success, or a classified
+   * ProviderError (plus any Retry-After hint) without reading the body,
+   * so provider internals never surface and secrets can't leak.
+   */
+  private async tryRequest(body: {
+    model: string;
+    messages: ChatMessage[];
+    temperature: number;
+    max_tokens: number;
+  }): Promise<
+    | { ok: true; text: string }
+    | { ok: false; error: ProviderError; retryAfterSeconds: number | null }
+  > {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -152,8 +216,14 @@ export class OpenAICompatibleProvider implements AIProvider {
           signal: controller.signal,
         });
       } catch (err) {
-        const classified = classifyProviderError(err, this.label);
-        throw classified;
+        if (err instanceof Error && err.name === "AbortError") {
+          return { ok: false, error: new ProviderError("timeout", this.label), retryAfterSeconds: null };
+        }
+        return {
+          ok: false,
+          error: classifyProviderError(err, this.label),
+          retryAfterSeconds: null,
+        };
       }
 
       if (!response.ok) {
@@ -161,8 +231,15 @@ export class OpenAICompatibleProvider implements AIProvider {
           { status: response.status, statusText: response.statusText },
           this.label
         );
-        // Strip any body detail that could contain secrets before surfacing.
-        throw classified;
+        let retryAfterSeconds: number | null = null;
+        if (classified.type === "rate-limit" || classified.type === "unavailable") {
+          retryAfterSeconds = parseRetryAfter(
+            typeof response.headers?.get === "function"
+              ? response.headers.get("retry-after")
+              : null
+          );
+        }
+        return { ok: false, error: classified, retryAfterSeconds };
       }
 
       const data: unknown = await response.json();
@@ -177,14 +254,17 @@ export class OpenAICompatibleProvider implements AIProvider {
           : undefined;
 
       if (typeof text !== "string" || text.trim().length === 0) {
-        throw new ProviderError("malformed", this.label, "Provider returned an empty response");
+        return {
+          ok: false,
+          error: new ProviderError(
+            "malformed",
+            this.label,
+            "Provider returned an empty response"
+          ),
+          retryAfterSeconds: null,
+        };
       }
-      return text;
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        throw new ProviderError("timeout", this.label);
-      }
-      throw err;
+      return { ok: true, text };
     } finally {
       clearTimeout(timer);
     }

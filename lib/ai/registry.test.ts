@@ -161,6 +161,83 @@ describe("provider registry / fallback chain", () => {
     expect(plan.providers).toHaveLength(2);
   });
 
+  it("tries the OpenAI-compatible provider first when it is the active provider", async () => {
+    setProviderConfig({
+      activeProviderId: "openai-compatible",
+      gemini: { apiKeys: ["key-1"], model: "gemini-2.0-flash" },
+      openAiCompatible: {
+        displayName: "BAILU AI",
+        baseUrl: "https://bailucode.com/openapi/v1",
+        model: "bailu-apex",
+        apiKey: "sk-bailu",
+      },
+    });
+    const gemGen = vi.fn();
+    behaviors.gem["key-1"] = { gen: gemGen };
+    behaviors.oac.gen.mockResolvedValue({
+      flashcards: [{ prompt: "Q", answer: "A" }],
+    });
+
+    const out = await generateFlashcards(baseG);
+    expect(out.flashcards[0].prompt).toBe("Q");
+    expect(behaviors.oac.gen).toHaveBeenCalledTimes(1);
+    expect(gemGen).not.toHaveBeenCalled();
+
+    const plan = getFallbackPlan();
+    expect(plan.providers).toHaveLength(2);
+    expect(plan.providers[0].name).toBe("openai-compatible");
+  });
+
+  it("falls back to Gemini when the active OpenAI-compatible provider fails", async () => {
+    setProviderConfig({
+      activeProviderId: "openai-compatible",
+      gemini: { apiKeys: ["key-1"], model: "gemini-2.0-flash" },
+      openAiCompatible: {
+        displayName: "BAILU AI",
+        baseUrl: "https://bailucode.com/openapi/v1",
+        model: "bailu-apex",
+        apiKey: "sk-bailu",
+      },
+    });
+    behaviors.oac.gen.mockRejectedValue(
+      new ProviderError("authentication", "BAILU AI")
+    );
+    behaviors.gem["key-1"] = {
+      gen: vi.fn().mockResolvedValue({
+        flashcards: [{ prompt: "Q", answer: "A" }],
+      }),
+    };
+
+    const out = await generateFlashcards(baseG);
+    expect(out.flashcards[0].prompt).toBe("Q");
+    expect(behaviors.oac.gen).toHaveBeenCalledTimes(1);
+    expect(behaviors.gem["key-1"].gen).toHaveBeenCalledTimes(1);
+  });
+
+  it("mirrors active-provider ordering for evaluateExplanation", async () => {
+    setProviderConfig({
+      activeProviderId: "openai-compatible",
+      gemini: { apiKeys: ["key-1"], model: "gemini-2.0-flash" },
+      openAiCompatible: {
+        displayName: "BAILU AI",
+        baseUrl: "https://bailucode.com/openapi/v1",
+        model: "bailu-apex",
+        apiKey: "sk-bailu",
+      },
+    });
+    behaviors.oac.evalFn.mockRejectedValue(
+      new ProviderError("network", "BAILU AI")
+    );
+    behaviors.gem["key-1"] = {
+      evalFn: vi.fn().mockResolvedValue({ correctness: 0.8 }),
+    };
+
+    const result = await evaluateExplanation(baseE);
+    expect(result.correctness).toBe(0.8);
+    expect(behaviors.oac.evalFn).toHaveBeenCalledTimes(1);
+    expect(behaviors.gem["key-1"].evalFn).toHaveBeenCalledTimes(1);
+  });
+
   it("surfaces a classified provider error when every provider fails", async () => {
     setProviderConfig({
       activeProviderId: "gemini",

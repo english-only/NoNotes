@@ -22,33 +22,41 @@ export type FallbackPlan = {
 
 /**
  * Build the provider instances from the current config, in fallback order.
+ *
+ * The provider selected as `activeProviderId` in Settings runs first; the
+ * other configured option follows as automatic fallback on eligible
+ * failures, so a broken primary never bricks the user's alternative.
+ * Gemini keys are additionally rotated among themselves (multi-key).
  */
 export function buildProviderInstances(): AIProvider[] {
   const config = getProviderConfig();
   const instances: AIProvider[] = [];
 
   // Gemini keys are tried in order (multi-key rotation).
-  for (const key of config.gemini.apiKeys) {
-    if (!key || key.trim().length === 0) continue;
-    instances.push(new GeminiProvider(key.trim(), config.gemini.model));
-  }
+  const geminiProviders = config.gemini.apiKeys
+    .filter((key) => key && key.trim().length > 0)
+    .map((key) => new GeminiProvider(key.trim(), config.gemini.model));
 
-  // A configured OpenAI-compatible endpoint is always the final fallback,
-  // regardless of which provider is primary, so a broken primary never
-  // bricks the user's local/self-hosted option.
+  // A configured OpenAI-compatible endpoint (e.g. a local or self-hosted
+  // option like Ollama, or a hosted endpoint like BAILU) participates in
+  // the chain at the position matching its role.
   const oac = config.openAiCompatible;
-  if (
-    oac.baseUrl.trim().length > 0 &&
-    oac.model.trim().length > 0
-  ) {
-    instances.push(
-      new OpenAICompatibleProvider({
-        baseUrl: oac.baseUrl,
-        apiKey: oac.apiKey,
-        model: oac.model,
-        displayName: oac.displayName,
-      })
-    );
+  const oacProvider =
+    oac.baseUrl.trim().length > 0 && oac.model.trim().length > 0
+      ? new OpenAICompatibleProvider({
+          baseUrl: oac.baseUrl,
+          apiKey: oac.apiKey,
+          model: oac.model,
+          displayName: oac.displayName,
+        })
+      : null;
+
+  if (config.activeProviderId === "openai-compatible") {
+    if (oacProvider) instances.push(oacProvider);
+    instances.push(...geminiProviders);
+  } else {
+    instances.push(...geminiProviders);
+    if (oacProvider) instances.push(oacProvider);
   }
 
   return instances;

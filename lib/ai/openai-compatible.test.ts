@@ -13,11 +13,12 @@ function okResponse(content: string): Response {
   } as unknown as Response;
 }
 
-function statusResponse(status: number): Response {
+function statusResponse(status: number, headers: Record<string, string> = {}): Response {
   return {
     ok: status >= 200 && status < 300,
     status,
     statusText: "error",
+    headers: { get: (name: string) => headers[name.toLowerCase()] ?? null },
     json: async () => ({}),
   } as unknown as Response;
 }
@@ -27,6 +28,13 @@ const validFlashcards = {
     { prompt: "What is X?", answer: "X is Y." },
     { prompt: "Why Z?", answer: "Because." },
   ],
+};
+
+const flashcardInput = {
+  chunks: [{ ordinal: 0, content: "X equals Y." }],
+  deckTitle: "Deck",
+  courseTitle: "Course",
+  cardCount: 2,
 };
 
 const validEvaluation = {
@@ -121,16 +129,89 @@ describe("OpenAICompatibleProvider", () => {
     ).rejects.toThrow(ProviderError);
   });
 
-  it("throws a classified network error when fetch itself fails", async () => {
-    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
-    await expect(
-      makeProvider().generateFlashcards({
-        chunks: [{ ordinal: 0, content: "X" }],
-        deckTitle: "D",
-        courseTitle: "C",
-        cardCount: 2,
-      })
-    ).rejects.toThrow(ProviderError);
+  it("retries transient network failures then throws the classified error", async () => {
+    vi.useFakeTimers();
+    try {
+      fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+      const promise = makeProvider().generateFlashcards(flashcardInput);
+      // Attach the handler before advancing so the rejection is never
+      // "unhandled" while the retry sleeps tick by.
+      const assertion = expect(promise).rejects.toThrow(ProviderError);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await assertion;
+      // 3 attempts (1 + 2 retries) before giving up.
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries a 429 after Retry-After elapses and succeeds", async () => {
+    vi.useFakeTimers();
+    try {
+      fetchMock
+        .mockResolvedValueOnce(statusResponse(429, { "retry-after": "1" }))
+        .mockResolvedValueOnce(okResponse(JSON.stringify(validFlashcards)));
+
+      const promise = makeProvider().generateFlashcards(flashcardInput);
+      await vi.advanceTimersByTimeAsync(2_000);
+      await expect(promise).resolves.toEqual(validFlashcards);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries a 503 (unavailable) with backoff and succeeds", async () => {
+    vi.useFakeTimers();
+    try {
+      fetchMock
+        .mockResolvedValueOnce(statusResponse(503))
+        .mockResolvedValueOnce(okResponse(JSON.stringify(validFlashcards)));
+
+      const promise = makeProvider().generateFlashcards(flashcardInput);
+      await vi.advanceTimersByTimeAsync(5_000);
+      await expect(promise).resolves.toEqual(validFlashcards);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not retry authentication errors", async () => {
+    fetchMock.mockResolvedValue(statusResponse(401));
+    await expect(makeProvider().generateFlashcards(flashcardInput)).rejects.toThrow(
+      ProviderError
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives up after exhausting retries and surfaces the classified error", async () => {
+    vi.useFakeTimers();
+    try {
+      fetchMock.mockResolvedValue(statusResponse(429, { "retry-after": "1" }));
+      const promise = makeProvider().generateFlashcards(flashcardInput);
+      const assertion = expect(promise).rejects.toMatchObject({ type: "rate-limit" });
+      await vi.advanceTimersByTimeAsync(20_000);
+      await assertion;
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("respects retryAttempts: 1 and does not retry", async () => {
+    fetchMock.mockResolvedValue(statusResponse(429));
+    const provider = new OpenAICompatibleProvider({
+      baseUrl: "https://api.example.com/v1",
+      apiKey: "test-key",
+      model: "test-model",
+      retryAttempts: 1,
+    });
+    await expect(provider.generateFlashcards(flashcardInput)).rejects.toMatchObject({
+      type: "rate-limit",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("throws a malformed error for invalid JSON output", async () => {

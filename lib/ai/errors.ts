@@ -9,6 +9,7 @@ export type ProviderErrorType =
   | "authentication"
   | "quota"
   | "rate-limit"
+  | "unavailable"
   | "network"
   | "timeout"
   | "malformed"
@@ -20,6 +21,8 @@ const DEFAULT_MESSAGES: Record<ProviderErrorType, string> = {
     "The provider rejected the API key. Check your key in Settings.",
   quota: "The provider account is out of quota. Try a different key or provider in Settings.",
   "rate-limit": "The provider is rate-limited. Wait a moment and try again.",
+  unavailable:
+    "The provider is temporarily unavailable. Try again in a moment.",
   network: "Could not reach the AI provider. Check your connection.",
   timeout: "The provider took too long to respond. Try again.",
   malformed: "The provider returned a response we couldn't parse. Try again.",
@@ -34,6 +37,7 @@ export function isFallbackEligible(type: ProviderErrorType): boolean {
     type === "authentication" ||
     type === "quota" ||
     type === "rate-limit" ||
+    type === "unavailable" ||
     type === "network" ||
     type === "timeout"
   );
@@ -94,10 +98,12 @@ export function classifyProviderError(
       case 408:
       case 504:
         return new ProviderError("timeout", providerLabel);
+      // 5xx are transient upstream overloads (OpenAI classifies 503 as
+      // "server_is_overloaded") — retryable, never a billing/quota state.
       case 500:
       case 502:
       case 503:
-        return new ProviderError("quota", providerLabel);
+        return new ProviderError("unavailable", providerLabel);
       default:
         break;
     }
@@ -109,13 +115,24 @@ export function classifyProviderError(
   if (/rate.?limit|too many requests|429/i.test(raw)) {
     return new ProviderError("rate-limit", providerLabel);
   }
+  if (
+    /temporarily unavailable|unavailable|overloaded|server error|bad gateway|service unavailable|internal error|500|502|503/i.test(
+      raw
+    )
+  ) {
+    return new ProviderError("unavailable", providerLabel);
+  }
   if (/quota|insufficient|402|exceeded/i.test(raw)) {
     return new ProviderError("quota", providerLabel);
   }
   if (/timed? ?out|timeout|abort/i.test(raw)) {
     return new ProviderError("timeout", providerLabel);
   }
-  if (/network|fetch failed|load failed|offline|no connection|ECONN/i.test(raw)) {
+  if (
+    /network|fetch failed|failed to fetch|load failed|offline|no connection|ECONN/i.test(
+      raw
+    )
+  ) {
     return new ProviderError("network", providerLabel);
   }
   if (/json|parse|unexpected|malformed|schema|validation/i.test(raw)) {

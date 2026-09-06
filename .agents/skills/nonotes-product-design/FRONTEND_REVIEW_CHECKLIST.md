@@ -176,7 +176,7 @@ Run before requesting review:
 - [ ] Mobile + desktop layout unchanged where not intended
 - [ ] Existing keyboard shortcuts still functional
 
-## Release Gate (Mark COMPLETE only when ALL above are ✅)
+## Release Gate (Mark COMPLETE only when ALL above are PASS)
 
 - [ ] No dead buttons or fake links
 - [ ] No TODO/FIXME/HACK/XXX in production code
