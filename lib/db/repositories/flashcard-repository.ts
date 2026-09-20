@@ -84,5 +84,10 @@ export async function updateFlashcard(
 }
 
 export async function deleteFlashcard(id: string): Promise<void> {
-  await db.flashcards.delete(id);
+  // Deleting a card also removes its review logs so orphaned logs never
+  // accumulate (reviewLogs is the unboundedly-growing table).
+  await db.transaction("rw", db.flashcards, db.reviewLogs, async () => {
+    await db.reviewLogs.where("flashcardId").equals(id).delete();
+    await db.flashcards.delete(id);
+  });
 }

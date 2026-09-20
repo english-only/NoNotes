@@ -63,5 +63,19 @@ export async function updateTopic(id: string, patch: TopicPatch): Promise<Topic>
 }
 
 export async function deleteTopic(id: string): Promise<void> {
-  await db.topics.delete(id);
+  // Deleting a topic detaches its decks and sources by clearing their
+  // topicId (preserving the data) rather than leaving dangling references.
+  await db.transaction("rw", db.topics, db.decks, db.sources, async () => {
+    const decks = await db.decks.where("topicId").equals(id).toArray();
+    for (const deck of decks) {
+      await db.decks.put({ ...deck, topicId: undefined, updatedAt: Date.now() });
+    }
+
+    const sources = await db.sources.where("topicId").equals(id).toArray();
+    for (const source of sources) {
+      await db.sources.put({ ...source, topicId: undefined, updatedAt: Date.now() });
+    }
+
+    await db.topics.delete(id);
+  });
 }

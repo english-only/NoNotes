@@ -69,19 +69,43 @@ export async function updateCourse(
 }
 
 export async function deleteCourse(id: string): Promise<void> {
-  // Deleting a course cascades to its topics, decks, and (through the decks)
-  // flashcards so orphaned rows never accumulate.
+  // Deleting a course cascades to its topics, decks, flashcards, sources,
+  // chunks, review logs (through the decks' cards), and feynman attempts so
+  // orphaned rows never accumulate.
   await db.transaction(
     "rw",
-    db.courses,
-    db.topics,
-    db.decks,
-    db.flashcards,
+    [
+      db.courses,
+      db.topics,
+      db.decks,
+      db.flashcards,
+      db.reviewLogs,
+      db.sources,
+      db.chunks,
+      db.feynmanAttempts,
+    ],
     async () => {
       const deckIds = await db.decks.where("courseId").equals(id).primaryKeys();
+      const cardIds = await db.flashcards
+        .where("deckId")
+        .anyOf(deckIds)
+        .primaryKeys();
+      const sourceIds = await db.sources
+        .where("courseId")
+        .equals(id)
+        .primaryKeys();
+
+      if (cardIds.length > 0) {
+        await db.reviewLogs.where("flashcardId").anyOf(cardIds).delete();
+      }
       if (deckIds.length > 0) {
         await db.flashcards.where("deckId").anyOf(deckIds).delete();
       }
+      if (sourceIds.length > 0) {
+        await db.chunks.where("sourceId").anyOf(sourceIds).delete();
+      }
+      await db.sources.where("courseId").equals(id).delete();
+      await db.feynmanAttempts.where("courseId").equals(id).delete();
       await db.decks.where("courseId").equals(id).delete();
       await db.topics.where("courseId").equals(id).delete();
       await db.courses.delete(id);

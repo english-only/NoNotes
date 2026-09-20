@@ -104,10 +104,25 @@ export async function updateDeck(id: string, patch: DeckPatch): Promise<Deck> {
 }
 
 export async function deleteDeck(id: string): Promise<void> {
-  // Deleting a deck cascades to its flashcards so orphaned cards never
-  // accumulate. Flashcards have no children of their own yet.
-  await db.transaction("rw", db.decks, db.flashcards, async () => {
-    await db.flashcards.where("deckId").equals(id).delete();
-    await db.decks.delete(id);
-  });
+  // Deleting a deck cascades to its flashcards, their review logs, and the
+  // deck's feynman attempts so orphaned rows never accumulate.
+  await db.transaction(
+    "rw",
+    db.decks,
+    db.flashcards,
+    db.reviewLogs,
+    db.feynmanAttempts,
+    async () => {
+      const cardIds = await db.flashcards
+        .where("deckId")
+        .equals(id)
+        .primaryKeys();
+      if (cardIds.length > 0) {
+        await db.reviewLogs.where("flashcardId").anyOf(cardIds).delete();
+      }
+      await db.flashcards.where("deckId").equals(id).delete();
+      await db.feynmanAttempts.where("deckId").equals(id).delete();
+      await db.decks.delete(id);
+    }
+  );
 }
