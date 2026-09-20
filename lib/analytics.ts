@@ -73,35 +73,68 @@ export function computeAnalytics(input: {
     totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0;
 
   // Per-deck stats, used to flag decks needing attention.
+  // Single-pass O(C + L + D): bucket cards by deck once, then attribute logs
+  // through a cardId→deckId map instead of a nested find/filter per deck.
+  const deckIdSet = new Set(decks.map((d) => d.id));
+  const cardsByDeck = new Map<string, Flashcard[]>();
+  const stableSumByDeck = new Map<string, { sum: number; count: number }>();
+  for (const card of allFlashcards) {
+    if (!deckIdSet.has(card.deckId)) continue;
+    const bucket = cardsByDeck.get(card.deckId);
+    if (bucket) {
+      bucket.push(card);
+    } else {
+      cardsByDeck.set(card.deckId, [card]);
+    }
+    if (card.fsrs && card.fsrs.stability > 0) {
+      const stable = stableSumByDeck.get(card.deckId);
+      if (stable) {
+        stable.sum += card.fsrs.stability;
+        stable.count += 1;
+      } else {
+        stableSumByDeck.set(card.deckId, { sum: card.fsrs.stability, count: 1 });
+      }
+    }
+  }
+
+  const cardDeck = new Map(allFlashcards.map((c) => [c.id, c.deckId]));
+  const countsByDeck = new Map<
+    string,
+    { again: number; good: number }
+  >();
+  for (const log of allLogs) {
+    const deckId = cardDeck.get(log.flashcardId);
+    if (!deckId || !deckIdSet.has(deckId)) continue;
+    const entry = countsByDeck.get(deckId);
+    if (entry) {
+      if (log.rating === 1) entry.again += 1;
+      else if (log.rating === 3) entry.good += 1;
+    } else {
+      countsByDeck.set(deckId, {
+        again: log.rating === 1 ? 1 : 0,
+        good: log.rating === 3 ? 1 : 0,
+      });
+    }
+  }
+
   const weakDecks: DeckStats[] = [];
   for (const deck of decks) {
-    const deckCards = allFlashcards.filter((c) => c.deckId === deck.id);
-    if (deckCards.length === 0) continue;
+    const deckCards = cardsByDeck.get(deck.id);
+    if (!deckCards || deckCards.length === 0) continue;
 
     const deckDue = deckCards.filter((c) => c.dueAt <= now).length;
-    const deckLogs = allLogs.filter((log) => {
-      const card = allFlashcards.find((c) => c.id === log.flashcardId);
-      return card?.deckId === deck.id;
-    });
-
-    const againCount = deckLogs.filter((l) => l.rating === 1).length;
-    const goodCount = deckLogs.filter((l) => l.rating === 3).length;
-    const stableDeckCards = deckCards.filter(
-      (c) => c.fsrs && c.fsrs.stability > 0
-    );
+    const counts = countsByDeck.get(deck.id) ?? { again: 0, good: 0 };
+    const stable = stableSumByDeck.get(deck.id) ?? { sum: 0, count: 0 };
     const avgStability =
-      stableDeckCards.length > 0
-        ? stableDeckCards.reduce((sum, c) => sum + c.fsrs.stability, 0) /
-          stableDeckCards.length
-        : 0;
+      stable.count > 0 ? stable.sum / stable.count : 0;
 
     weakDecks.push({
       deckId: deck.id,
       deckTitle: deck.title,
       totalCards: deckCards.length,
       dueCards: deckDue,
-      againCount,
-      goodCount,
+      againCount: counts.again,
+      goodCount: counts.good,
       averageStability: Math.round(avgStability * 100) / 100,
     });
   }
