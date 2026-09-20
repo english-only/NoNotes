@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fadeUp, MEDIUM, SHORT } from "@/lib/motion";
+import { fadeUp, MEDIUM, SHORT, motionForPreference } from "@/lib/motion";
 import { ProductPreview } from "@/components/landing/product-preview";
 
 const NAV_LINKS = [
@@ -42,7 +42,7 @@ function Reveal({
   return (
     <motion.div
       className={cn(className)}
-      transition={{ delay, ...SHORT }}
+      transition={motionForPreference({ delay, ...SHORT })}
       variants={fadeUp}
       initial="hidden"
       whileInView="visible"
@@ -154,7 +154,7 @@ export default function LandingPage() {
           <motion.div
             className="mx-auto max-w-3xl text-center"
             variants={fadeUp}
-            transition={{ ...MEDIUM, delay: 0.1 }}
+            transition={motionForPreference({ ...MEDIUM, delay: 0.1 })}
             initial="hidden"
             animate="visible"
           >
@@ -203,7 +203,7 @@ export default function LandingPage() {
           <motion.div
             className="mt-16 sm:mt-20"
             variants={fadeUp}
-            transition={{ ...MEDIUM, delay: 0.25 }}
+            transition={motionForPreference({ ...MEDIUM, delay: 0.25 })}
             initial="hidden"
             animate="visible"
           >
@@ -260,7 +260,7 @@ export default function LandingPage() {
                   <motion.li
                     className="relative flex flex-col gap-3 rounded-xl border border-border/60 bg-card/40 p-6"
                     key={step}
-                    transition={{ delay: i * 0.08, ...SHORT }}
+                    transition={motionForPreference({ delay: i * 0.08, ...SHORT })}
                     variants={fadeUp}
                     initial="hidden"
                     whileInView="visible"
@@ -428,7 +428,7 @@ export default function LandingPage() {
                 <motion.div
                   className="rounded-xl border border-border/60 bg-card/40 p-6"
                   key={title}
-                  transition={{ delay: i * 0.06, ...SHORT }}
+                  transition={motionForPreference({ delay: i * 0.06, ...SHORT })}
                   variants={fadeUp}
                   initial="hidden"
                   whileInView="visible"
@@ -574,7 +574,7 @@ export default function LandingPage() {
             <motion.div
               className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-primary/[0.04] p-8 text-center sm:p-12"
               variants={fadeUp}
-              transition={SHORT}
+              transition={motionForPreference(SHORT)}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}

@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fade, SHORT } from "@/lib/motion";
+import { fade, SHORT, motionForPreference } from "@/lib/motion";
 import { getCourse } from "@/lib/db/repositories/course-repository";
 import { getDeck } from "@/lib/db/repositories/deck-repository";
 import { listFlashcardsByDeck } from "@/lib/db/repositories/flashcard-repository";
@@ -439,7 +439,7 @@ export function StudySession({ deckId }: { deckId: string }) {
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={SHORT}
+              transition={motionForPreference(SHORT)}
             >
               <div
                 aria-hidden="true"

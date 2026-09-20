@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { staggerList, SHORT } from "@/lib/motion";
+import { staggerList, SHORT, motionForPreference } from "@/lib/motion";
 import { db } from "@/lib/db/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -161,7 +161,7 @@ export function DashboardStats() {
               custom={i}
               initial="hidden"
               animate="visible"
-              transition={SHORT}
+              transition={motionForPreference(SHORT)}
             >
               <div
                 className={cn(

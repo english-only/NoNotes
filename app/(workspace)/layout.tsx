@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { DbInitializer } from "@/components/db-initializer";
 import { AppShell } from "@/components/layout/app-shell";
-import { fadeUp, SHORT } from "@/lib/motion";
+import { fadeUp, SHORT, motionForPreference } from "@/lib/motion";
 
 export default function WorkspaceLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -21,7 +21,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            transition={SHORT}
+            transition={motionForPreference(SHORT)}
           >
             {children}
           </motion.div>

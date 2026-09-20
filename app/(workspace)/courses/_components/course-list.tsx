@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { staggerContainer, staggerList, SHORT } from "@/lib/motion";
+import { staggerContainer, staggerList, SHORT, motionForPreference } from "@/lib/motion";
 import { CreateCourseDialog } from "@/app/(workspace)/courses/_components/create-course-dialog";
 import {
   deleteCourse,
@@ -189,7 +189,7 @@ export function CourseList() {
               key={course.id}
               variants={staggerList()}
               custom={i}
-              transition={SHORT}
+              transition={motionForPreference(SHORT)}
             >
             <Card>
               <CardHeader>
