@@ -14,10 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  generateFromSource,
-  persistAcceptedCards,
-} from "@/lib/ai/generation";
+import { persistAcceptedCards } from "@/lib/ai/generation";
 import { isProviderConfigured, getActiveProviderLabel } from "@/lib/ai/config";
 import { listSourcesByCourse } from "@/lib/db/repositories/source-repository";
 import { listChunksBySource } from "@/lib/db/repositories/chunk-repository";
@@ -53,6 +50,7 @@ export function GenerateFromSourceDialog({
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [cardCount, setCardCount] = useState(5);
   const [chunkInfo, setChunkInfo] = useState<string>("");
+  const [truncated, setTruncated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewCards, setReviewCards] = useState<ReviewCard[]>([]);
   const [wasOpen, setWasOpen] = useState(false);
@@ -63,6 +61,7 @@ export function GenerateFromSourceDialog({
     setSelectedSourceId("");
     setCardCount(5);
     setChunkInfo("");
+    setTruncated(false);
     setError(null);
     setReviewCards([]);
   }
@@ -120,6 +119,10 @@ export function GenerateFromSourceDialog({
     setError(null);
 
     try {
+      // Dynamic import keeps the @google/genai + zod chunk (~615KB) out of the
+      // eager bundle of deck pages; it loads on first generation only.
+      const { generateFromSource } = await import("@/lib/ai/generation");
+
       const result = await generateFromSource({
         sourceId: selectedSourceId,
         deckId,
@@ -135,6 +138,9 @@ export function GenerateFromSourceDialog({
           editing: false,
         }))
       );
+      // Map-reduce generation processes the whole source in budget-sized
+      // batches, so `truncated` now only fires when entire batches failed.
+      setTruncated(result.truncated);
       setStep("review");
     } catch (err) {
       setError(
@@ -296,6 +302,16 @@ export function GenerateFromSourceDialog({
 
         {step === "review" && (
           <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
+            {truncated && (
+              <p
+                className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-300"
+                role="status"
+              >
+                Some parts of the source could not be used for generation —
+                the provider failed on them. The rest of the material was
+                processed in full.
+              </p>
+            )}
             {reviewCards.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No cards were generated. Try again with different settings.

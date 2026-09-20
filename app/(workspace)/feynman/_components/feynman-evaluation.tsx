@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { isProviderConfigured, getActiveProviderLabel } from "@/lib/ai/config";
-import { evaluateExplanation } from "@/lib/ai/registry";
+import { capChunksToBudget } from "@/lib/ai/context-budget";
 import { listCourses } from "@/lib/db/repositories/course-repository";
 import { listSourcesByCourse } from "@/lib/db/repositories/source-repository";
 import { listChunksBySource } from "@/lib/db/repositories/chunk-repository";
@@ -68,6 +68,7 @@ export function FeynmanEvaluation() {
   const [feedback, setFeedback] = useState<FeynmanFeedback | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [apiKeyMissing, setApiKeyMissing] = useState(false);
+  const [sourceTruncated, setSourceTruncated] = useState(false);
   const [history, setHistory] = useState<FeynmanAttempt[]>([]);
 
   // Load courses on mount
@@ -126,6 +127,7 @@ export function FeynmanEvaluation() {
     setStatus("evaluating");
     setError(null);
     setApiKeyMissing(false);
+    setSourceTruncated(false);
     setFeedback(null);
 
     try {
@@ -134,11 +136,21 @@ export function FeynmanEvaluation() {
       let chunkIds: string[] = [];
       if (selectedSourceId) {
         const sourceChunks = await listChunksBySource(selectedSourceId);
-        chunks = sourceChunks.map((c) => ({
-          ordinal: c.ordinal,
-          content: c.content,
-        }));
-        chunkIds = sourceChunks.map((c) => c.id);
+        // Cap the grounding context so a huge source cannot overflow the
+        // model's context window or burn the user's token quota.
+        const capped = capChunksToBudget(
+          sourceChunks.map((c) => ({
+            ordinal: c.ordinal,
+            content: c.content,
+          }))
+        );
+        chunks = capped.chunks;
+        chunkIds = sourceChunks
+          .filter((c) => capped.chunks.some((kept) => kept.ordinal === c.ordinal))
+          .map((c) => c.id);
+        if (capped.truncated) {
+          setSourceTruncated(true);
+        }
       } else {
         // Use all sources for the course
         const allSources = await listSourcesByCourse(selectedCourseId);
@@ -161,6 +173,10 @@ export function FeynmanEvaluation() {
       }
 
       const course = courses.find((c) => c.id === selectedCourseId);
+
+      // Dynamic import keeps the @google/genai + zod chunk (~615KB) out of the
+      // eager bundle of /feynman; it loads on first evaluation only.
+      const { evaluateExplanation } = await import("@/lib/ai/registry");
 
       const result = await evaluateExplanation({
         chunks,
@@ -338,6 +354,16 @@ export function FeynmanEvaluation() {
             </div>
           )}
 
+          {sourceTruncated && (
+            <div
+              className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-300"
+              role="status"
+            >
+              Source truncated for generation — only the beginning of the
+              selected source fits the prompt budget.
+            </div>
+          )}
+
           <Button
             className="w-full sm:w-auto sm:min-w-48"
             disabled={!canSubmit}
@@ -362,6 +388,15 @@ export function FeynmanEvaluation() {
       {/* Feedback display */}
       {status === "done" && feedback && (
         <div className="flex flex-col gap-6">
+          {sourceTruncated && (
+            <div
+              className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-300"
+              role="status"
+            >
+              Source truncated for generation — the evaluation was grounded in
+              only the beginning of the selected source.
+            </div>
+          )}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
