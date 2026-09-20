@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+import {
+  checkRateLimit,
+  RATE_LIMIT_MAX_REQUESTS,
+} from "./rate-limit";
+
 /** Maximum response size (2 MB). */
 const MAX_RESPONSE_SIZE = 2 * 1024 * 1024;
 
@@ -161,7 +166,31 @@ function extractTextFromHtml(html: string, url: string): { title: string; text: 
   return { title, text: cleaned };
 }
 
+/** Best-effort client IP for the in-memory rate limiter (local-first app). */
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
 export async function POST(request: Request) {
+  // Sliding-window rate limit: 30 req/min per IP. This endpoint makes
+  // server-side fetches to arbitrary user-supplied URLs, so an unthrottled
+  // proxy would be an open relay for egress abuse.
+  const clientIp = getClientIp(request);
+  const limit = checkRateLimit(clientIp);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      {
+        error: `Too many requests. Limit is ${RATE_LIMIT_MAX_REQUESTS} per minute. Try again in ${limit.retryAfterSeconds}s.`,
+      },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const { url } = body as { url?: string };
