@@ -49,6 +49,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Agent Orchestration
 
+**ECC is the operating default.** Every task runs through the ECC harness natively — do not wait to be asked:
+
+1. **Methodology from `skills/`** — load the relevant SKILL.md before acting: `tdd-workflow` for behavioral changes, `verification-loop` before claiming anything is done, `security-review` for auth/input/secrets/API endpoints, `react-performance` + `benchmark-optimization-loop` for anything user-facing and slow, `search-first` for research.
+2. **Review from `agents/`** — apply the matching agent's checklist inline at the review stage: `code-reviewer` + `typescript-reviewer` on every diff, `security-reviewer` on anything touching API routes, keys, or user input, `build-error-resolver` when the gate is red, `architect` before cross-cutting refactors.
+3. **Rules from `rules/` are binding** — immutability, error handling, file-size limits; they constrain all code written here.
+4. **Be explicit about harness limits** — if the runtime cannot spawn subagents, read the agent/skill files directly and apply their checklists inline; never skip a stage because a subagent isn't available.
+
 Use agents proactively without user prompt:
 - Complex feature requests → **planner**
 - Code just written/modified → **code-reviewer**
@@ -87,6 +94,20 @@ Use parallel execution for independent operations — launch multiple agents sim
 **Error handling:** Handle errors at every level. Provide user-friendly messages in UI code. Log detailed context server-side. Never silently swallow errors.
 
 **Input validation:** Validate all user input at system boundaries. Use schema-based validation. Fail fast with clear messages. Never trust external data.
+
+## Performance Rules (Ingestion & Bulk DB Writes)
+
+Learned the hard way while fixing slow large-PDF ingestion (57 MB textbook took minutes to process):
+
+1. **Never write rows in a loop.** One IndexedDB/Dexie transaction per row is pathologically slow at scale — 1,000 chunks measured **4,067 ms** via a per-row `createChunk` loop vs **76 ms** via a single `bulkAdd` (53×). Batch writes exist for this: prefer `createChunks` (chunk-repository), `bulkAdd`/`bulkPut` inside a `db.transaction`, or a single composed write. Only loop per-row when each row genuinely needs its own read-validate-write cycle.
+
+2. **Parallelize independent I/O with bounded concurrency.** Sequential `await` loops over pages/URLs/rows serialize independent work. Use a worker-pool pattern (8 workers measured as a safe default for pdf.js page extraction); write results into a preallocated array indexed by input order so output stays deterministic.
+
+3. **Long operations must report progress.** Any processing expected to exceed ~1 s (PDF extraction, chunking, generation) must surface progress to the UI (callback → state → visible status text/bar). Silence reads as a hang; a hung-looking upload is the #1 reported UX bug even when throughput is fine.
+
+4. **Measure before and after (benchmark-optimization-loop skill).** No optimization without a baseline number, a variant table, and a correctness gate (existing tests + output equivalence). Record the winning variant's measurement next to the code that implements it.
+
+5. **When optimizing anything user-facing in this repo, activate the `react-performance` and `benchmark-optimization-loop` skills first**, and use the `performance-optimizer` agent for review of the change.
 
 ## Testing Requirements
 
