@@ -16,6 +16,19 @@ export type PdfExtractionResult = {
   title?: string;
 };
 
+/** Options for text extraction. */
+export type PdfExtractionOptions = {
+  /** Called after each page finishes, with (pagesDone, totalPages). */
+  onProgress?: (done: number, total: number) => void;
+};
+
+/**
+ * Maximum number of pages extracted in parallel. pdfjs compresses page data
+ * independently per page, so concurrent getPage/textContent calls are safe
+ * and dramatically faster on large documents than a sequential loop.
+ */
+const PAGE_CONCURRENCY = 8;
+
 /**
  * Extract readable text from a PDF file.
  *
@@ -27,6 +40,7 @@ export type PdfExtractionResult = {
 export async function extractPdfText(
   data: ArrayBuffer | Uint8Array,
   fileName: string,
+  options: PdfExtractionOptions = {},
 ): Promise<PdfExtractionResult> {
   // Validate size
   if (data.byteLength > MAX_PDF_SIZE) {
@@ -58,10 +72,15 @@ export async function extractPdfText(
     throw new Error("PDF file contains no pages.");
   }
 
-  // Extract text from each page
-  const pageTexts: string[] = [];
-  for (let i = 1; i <= pageCount; i++) {
-    const page = await doc.getPage(i);
+  // Extract text from pages with bounded concurrency, preserving order.
+  // Results are written into a preallocated array indexed by page number so
+  // output order is deterministic regardless of completion order.
+  const pageTexts: string[] = new Array(pageCount);
+  let pagesDone = 0;
+
+  const extractPage = async (pageIndex: number): Promise<void> => {
+    const pageNumber = pageIndex + 1;
+    const page = await doc.getPage(pageNumber);
     const content = await page.getTextContent();
 
     // Reconstruct text from items, preserving line structure
@@ -86,12 +105,25 @@ export async function extractPdfText(
       lastY = y;
     }
 
-    if (pageText.trim()) {
-      pageTexts.push(pageText.trim());
-    }
-  }
+    pageTexts[pageIndex] = pageText.trim();
+    pagesDone += 1;
+    options.onProgress?.(pagesDone, pageCount);
+  };
 
-  const text = pageTexts.join("\n\n");
+  const queue = Array.from({ length: pageCount }, (_, i) => i);
+  const workers = Array.from(
+    { length: Math.min(PAGE_CONCURRENCY, pageCount) },
+    async () => {
+      while (queue.length > 0) {
+        const pageIndex = queue.shift();
+        if (pageIndex === undefined) break;
+        await extractPage(pageIndex);
+      }
+    },
+  );
+  await Promise.all(workers);
+
+  const text = pageTexts.filter((t) => t && t.length > 0).join("\n\n");
 
   if (!text.trim()) {
     throw new Error(

@@ -93,4 +93,73 @@ describe("extractPdfText", () => {
       "no readable text"
     );
   });
+
+  it("reports page progress during extraction", async () => {
+    const pages = [1, 2, 3].map(() => ({
+      numPages: 3,
+      getPage: (i: number) =>
+        Promise.resolve({
+          getTextContent: () =>
+            Promise.resolve({
+              items: [
+                { str: `Page ${i} text`, transform: [0, 0, 0, 0, 0, 100] },
+              ],
+            }),
+        }),
+    }));
+    documentImpl = () => ({
+      promise: Promise.resolve({
+        numPages: 3,
+        getPage: (i: number) => pages[0].getPage(i),
+        getMetadata: () => Promise.resolve({ info: {} }),
+      }),
+    });
+
+    const progressUpdates: number[] = [];
+    const data = new ArrayBuffer(100);
+    await extractPdfText(data, "progress.pdf", {
+      onProgress: (done, total) => progressUpdates.push(done / total),
+    });
+
+    expect(progressUpdates.length).toBeGreaterThan(0);
+    expect(progressUpdates[progressUpdates.length - 1]).toBe(1);
+  });
+
+  it("extracts pages concurrently while preserving page order", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    documentImpl = () => ({
+      promise: Promise.resolve({
+        numPages: 8,
+        getPage: (i: number) => {
+          inFlight++;
+          maxInFlight = Math.max(maxInFlight, inFlight);
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              inFlight--;
+              resolve({
+                getTextContent: () =>
+                  Promise.resolve({
+                    items: [
+                      { str: `Page ${i}`, transform: [0, 0, 0, 0, 0, 100] },
+                    ],
+                  }),
+              });
+            }, 10);
+          });
+        },
+        getMetadata: () => Promise.resolve({ info: {} }),
+      }),
+    });
+
+    const data = new ArrayBuffer(100);
+    const result = await extractPdfText(data, "concurrent.pdf");
+
+    // Order preserved despite concurrency.
+    const pages = result.text.split("\n\n").map((p) => p.trim());
+    expect(pages[0]).toContain("Page 1");
+    expect(pages[7]).toContain("Page 8");
+    // Concurrency actually happened (more than one page in flight at once).
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
 });

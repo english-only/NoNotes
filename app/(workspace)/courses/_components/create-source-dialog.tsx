@@ -45,6 +45,7 @@ export function CreateSourceDialog({
   const [wasOpen, setWasOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState("");
+  const [progress, setProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -57,6 +58,7 @@ export function CreateSourceDialog({
     setSaving(false);
     setProcessing(false);
     setProcessingMessage("");
+    setProgress(null);
     setSelectedFile(null);
   }
   if (wasOpen !== open) {
@@ -81,7 +83,14 @@ export function CreateSourceDialog({
           const { extractPdfText } = await import(
             "@/lib/ingestion/pdf-extractor"
           );
-          const result = await extractPdfText(arrayBuffer, selectedFile.name);
+          const result = await extractPdfText(arrayBuffer, selectedFile.name, {
+            onProgress: (done, total) => {
+              setProgress(Math.round((done / total) * 100));
+              setProcessingMessage(
+                `Extracting text from PDF… page ${done} of ${total}`,
+              );
+            },
+          });
           rawContent = result.text;
           // Use PDF title if no custom title provided
           if (!title.trim() && result.title) {
@@ -136,7 +145,10 @@ export function CreateSourceDialog({
         rawContent,
         processedContent: rawContent,
       });
+      setProcessing(true);
+      setProcessingMessage("Chunking content for study generation…");
       await processSource(source.id);
+      setProcessing(false);
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -280,9 +292,20 @@ export function CreateSourceDialog({
           )}
 
           {processing && (
-            <p className="text-sm text-muted-foreground" role="status">
-              {processingMessage}
-            </p>
+            <div className="flex flex-col gap-1" role="status">
+              <p className="text-sm text-muted-foreground">{processingMessage}</p>
+              {progress !== null && (
+                <div
+                  aria-hidden="true"
+                  className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-200"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
           )}
 
           <DialogFooter>

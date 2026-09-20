@@ -1,5 +1,5 @@
 import { getSource, updateSource } from "@/lib/db/repositories/source-repository";
-import { createChunk, deleteChunksBySource } from "@/lib/db/repositories/chunk-repository";
+import { createChunks, deleteChunksBySource } from "@/lib/db/repositories/chunk-repository";
 
 export type ProcessResult = {
   sourceId: string;
@@ -138,22 +138,21 @@ export async function processSource(sourceId: string): Promise<ProcessResult> {
   // Step 3: Chunk
   const rawChunks = chunkContent(cleaned);
 
-  // Step 4: Clear old chunks and persist new ones
+  // Step 4: Clear old chunks and persist new ones in a single bulk write
+  // (per-chunk transactions are pathologically slow for large sources).
   await deleteChunksBySource(sourceId);
 
-  const chunks: { ordinal: number; content: string }[] = [];
-  for (let i = 0; i < rawChunks.length; i++) {
-    const chunk = await createChunk({
+  const chunks = await createChunks(
+    rawChunks.map((content, i) => ({
       sourceId,
       ordinal: i,
-      content: rawChunks[i],
-    });
-    chunks.push({ ordinal: chunk.ordinal, content: chunk.content });
-  }
+      content,
+    })),
+  );
 
   return {
     sourceId,
     chunkCount: chunks.length,
-    chunks,
+    chunks: chunks.map((c) => ({ ordinal: c.ordinal, content: c.content })),
   };
 }
