@@ -37,7 +37,9 @@ describe("chunk persistence performance", () => {
     sourceId = await seedSource();
   });
 
-  it("baseline: per-chunk createChunk loop", async () => {
+  // Slow by design — the baseline variant is the per-chunk write loop the
+  // batched path replaced. Generous timeout absorbs machine variance.
+  it("baseline: per-chunk createChunk loop", { timeout: 30_000 }, async () => {
     const start = performance.now();
     const rawChunks = Array.from({ length: CHUNK_COUNT }, (_, i) => ({
       sourceId,
