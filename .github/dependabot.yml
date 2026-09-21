@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # App dependencies (npm lockfile is the primary lane)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -20,6 +21,11 @@ updates:
         applies-to: "security-updates"
         patterns:
           - "*"
+    ignore:
+      # Next.js majors are handled manually after verifying the AI/browser
+      # provider matrix; minors+patches stay automated.
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -41,6 +47,7 @@ updates:
           - "minor"
           - "patch"
 
+  # ECC harness lanes
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

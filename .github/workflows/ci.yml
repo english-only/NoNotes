@@ -59,12 +59,10 @@ jobs:
           corepack enable
           corepack prepare pnpm@9 --activate
 
-      - name: Setup Yarn (via Corepack)
+      - name: Setup Yarn 1 (classic, matches tracked yarn.lock)
         if: matrix.pm == 'yarn'
         shell: bash
-        run: |
-          corepack enable
-          corepack prepare yarn@stable --activate
+        run: npm install -g yarn@1.22.22
 
       - name: Setup Bun
         if: matrix.pm == 'bun'
@@ -86,8 +84,8 @@ jobs:
             # (for example msgpackr-extract) even though this repo is Yarn-native
             # and pnpm is only exercised here as a compatibility lane.
             pnpm) pnpm install --ignore-scripts --config.strict-dep-builds=false --no-frozen-lockfile ;;
-            # Yarn Berry (v4+) removed --ignore-engines; engine checking is no longer a core feature
-            yarn) yarn install --mode=skip-build ;;
+            # Yarn 1 (classic) matches the tracked v1-format yarn.lock
+            yarn) yarn install --frozen-lockfile --ignore-scripts --ignore-engines ;;
             bun) bun install --ignore-scripts ;;
             *) echo "Unsupported package manager: ${{ matrix.pm }}" && exit 1 ;;
           esac
