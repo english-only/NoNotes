@@ -137,8 +137,7 @@ Test types:
 
 - `skills/` is the canonical ECC workflow surface.
 - New workflow contributions should land in `skills/` first.
-- `commands/` is a legacy slash-entry compatibility surface and should only be added or updated when a shim is still required for migration or cross-harness parity.
-- `.claude/skills/` mirrors curated skills for harnesses that auto-load that path (Freebuff, Claude Code); regenerate via `node scripts/sync-skills-to-claude.js`.
+- `.claude/skills/` mirrors curated skills for harnesses that auto-load that path (Freebuff, Claude Code).
 
 ## App Commands (NoNotes)
 
@@ -147,15 +146,8 @@ npm run dev         # Next.js dev server
 npm run build       # production build
 npm run typecheck   # tsc --noEmit
 npm run test        # vitest
+npm run test:coverage # vitest + coverage ratchet
 npm run test:e2e    # playwright
-```
-
-## ECC Commands
-
-```bash
-npm run ecc:test          # ECC validators + full ECC test suite
-node scripts/ci/validate-skills.js   # skills frontmatter validation
-npm run ecc:catalog:check # catalog truth check
 ```
 
 ## Project Structure
@@ -165,12 +157,9 @@ app/, components/, lib/   — NoNotes application (Next.js App Router)
 agents/          — 68 specialized subagents
 skills/          — 286 workflow skills and domain knowledge
 .claude/skills/  — flat mirror of skills/ for harness auto-loading
-commands/        — 94 slash commands
 hooks/                    — trigger-based automations
 rules/                    — always-follow guidelines (common + per-language)
-scripts/                  — cross-platform Node.js utilities (ECC)
-mcp-configs/              — MCP server configurations
-tests/                    — ECC test suite
+tests/e2e/                — Playwright end-to-end suite
 ```
 
 ## Git Workflow
